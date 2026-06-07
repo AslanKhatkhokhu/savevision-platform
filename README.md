@@ -1,3 +1,5 @@
+![SaveVision — a doctor behind every pair of eyes](docs/banner.png)
+
 # SaveVision
 
 **Remote medical guidance on smart glasses for war and emergency zones.**
