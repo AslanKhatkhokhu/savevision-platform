@@ -1,0 +1,12 @@
+{
+  "name": "savevision-operator-web",
+  "version": "0.1.0",
+  "description": "SaveVision operator dashboard + WebRTC signaling server. Operator watches the glasses wearer's live POV and pushes guidance to their display.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "ws": "^8.16.0"
+  }
+}

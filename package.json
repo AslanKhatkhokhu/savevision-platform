@@ -1,0 +1,14 @@
+{
+  "name": "savevision",
+  "version": "0.1.0",
+  "private": true,
+  "description": "SaveVision workspace for the operator web app and supporting demos.",
+  "packageManager": "yarn@3.5.0",
+  "workspaces": [
+    "operator-web"
+  ],
+  "scripts": {
+    "start": "yarn workspace savevision-operator-web start",
+    "start:operator-web": "yarn workspace savevision-operator-web start"
+  }
+}

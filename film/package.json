@@ -1,0 +1,22 @@
+{
+  "name": "savevision-film",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SaveVision 90-second demo film, rendered programmatically with Remotion.",
+  "scripts": {
+    "studio": "remotion studio",
+    "render": "remotion render SaveVision out/savevision.mp4 --codec=h264",
+    "render:social": "remotion render SaveVisionVertical out/savevision-vertical.mp4 --codec=h264",
+    "upgrade": "remotion upgrade"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.0",
+    "remotion": "4.0.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "18.3.1",
+    "typescript": "5.4.5"
+  }
+}

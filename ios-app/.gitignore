@@ -1,0 +1,24 @@
+# Xcode
+xcuserdata/
+*.xcuserstate
+DerivedData/
+build/
+.DS_Store
+
+# SwiftPM
+.swiftpm/
+Package.resolved
+
+# Local secrets / config overrides
+SaveVision/LocalConfig.swift
+
+# Fastlane generated artifacts
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/
+fastlane/test_output/
+*.ipa
+*.dSYM.zip
+
+# Meta DAT credentials — real values only; commit Secrets.example.xcconfig instead
+SaveVision/Secrets.xcconfig

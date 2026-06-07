@@ -1,0 +1,400 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<title>SaveVision: Remote Operator-Guided First Aid for War Zones</title><style>
+@page { size: A4; margin: 20mm 18mm 22mm; }
+* { box-sizing: border-box; }
+body {
+  font-family: Georgia, "Times New Roman", serif;
+  color: #1a1a1a; line-height: 1.5; font-size: 11.2pt; margin: 0;
+}
+h1, h2, h3, .brand, .tag, .toc-h, .cover-meta { font-family: "Helvetica Neue", Arial, sans-serif; }
+
+/* ---------- cover ---------- */
+.cover { height: 247mm; display: flex; flex-direction: column; page-break-after: always; }
+.cover .brand { font-size: 13pt; font-weight: 700; letter-spacing: 3px; color: #0a7d5a; text-transform: uppercase; }
+.cover .rule { height: 3px; background: #0a7d5a; width: 64px; margin: 10mm 0 8mm; }
+.cover h1 { font-size: 30pt; line-height: 1.15; margin: 0 0 6mm; font-weight: 800; }
+.cover .subtitle { font-size: 13.5pt; color: #444; font-style: italic; max-width: 150mm; }
+.cover .spacer { flex: 1; }
+.cover-meta { font-size: 9.5pt; color: #666; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6mm; }
+.classbox {
+  border: 1px solid #c9c9c9; border-left: 4px solid #b00020; background: #fbf7f7;
+  padding: 6mm 7mm; font-family: "Helvetica Neue", Arial, sans-serif; font-size: 8.6pt;
+  line-height: 1.45; color: #333;
+}
+.classbox b { color: #b00020; }
+
+/* ---------- table of contents ---------- */
+.toc { page-break-after: always; }
+.toc-h { font-size: 16pt; font-weight: 700; margin: 0 0 6mm; color: #0a7d5a; }
+.toc ol { list-style: none; padding: 0; margin: 0; counter-reset: t; }
+.toc li { counter-increment: t; font-family: "Helvetica Neue", Arial, sans-serif;
+          font-size: 11pt; padding: 2.4mm 0; border-bottom: 1px dotted #ccc; }
+.toc li::before { content: counter(t) ".  "; color: #0a7d5a; font-weight: 700; }
+
+/* ---------- summary ---------- */
+.summary { background: #f3f8f6; border-radius: 4px; padding: 6mm 7mm; margin: 0 0 8mm; }
+.summary .toc-h { margin-bottom: 4mm; }
+
+/* ---------- sections ---------- */
+.section { page-break-before: always; }
+h2 { font-size: 17pt; color: #0a7d5a; margin: 0 0 4mm; padding-bottom: 2mm; border-bottom: 2px solid #e2e2e2; font-weight: 800; }
+h3 { font-size: 12.5pt; margin: 6mm 0 2mm; color: #222; }
+p { margin: 0 0 3.2mm; }
+ul, ol { margin: 0 0 3.6mm 6mm; padding: 0; }
+li { margin: 0 0 1.6mm; }
+strong { color: #111; }
+blockquote { margin: 4mm 0; padding: 2mm 6mm; border-left: 3px solid #0a7d5a; background: #f6f9f8; font-style: italic; color: #333; }
+table { width: 100%; border-collapse: collapse; margin: 4mm 0; font-size: 9.6pt; font-family: "Helvetica Neue", Arial, sans-serif; page-break-inside: avoid; }
+th, td { border: 1px solid #d5d5d5; padding: 2.2mm 3mm; text-align: left; vertical-align: top; }
+th { background: #eef4f2; font-weight: 700; }
+
+/* ---------- back matter ---------- */
+.disclaimers, .glossary { page-break-before: always; }
+.disclaimers ul { list-style: none; margin-left: 0; }
+.disclaimers li { padding: 2.5mm 0 2.5mm 8mm; position: relative; border-bottom: 1px solid #eee; }
+.disclaimers li::before { content: "!"; position: absolute; left: 0; top: 2.5mm;
+  width: 5mm; height: 5mm; background: #b00020; color: #fff; border-radius: 50%;
+  text-align: center; font-weight: 700; font-family: Arial; font-size: 9pt; line-height: 5mm; }
+dl { margin: 0; }
+dt { font-weight: 700; font-family: "Helvetica Neue", Arial, sans-serif; margin-top: 3mm; color: #0a7d5a; }
+dd { margin: 0 0 2mm; }
+.footer-note { margin-top: 8mm; font-size: 8.5pt; color: #888; font-family: Arial; }
+</style></head><body>
+<div class="cover">
+  <div class="brand">SaveVision</div>
+  <div class="rule"></div>
+  <h1>SaveVision: Remote Operator-Guided First Aid for War Zones</h1>
+  <div class="subtitle">A concept for placing a trauma professional&#x27;s eyes and judgment behind the eyes of any connected bystander — within the minutes that decide survival</div>
+  <div class="spacer"></div>
+  <div class="cover-meta">Concept &amp; Design Document · June 2026</div>
+  <div class="classbox"><b>Notice.</b> This is a CONCEPT and design document for the SaveVision system. It is NOT medical advice, NOT legal advice, and does NOT create any clinician-patient or attorney-client relationship with any reader. The clinical sequences described are illustrative of how guided care would be structured, not a treatment protocol for use without a connected, licensed professional. Real emergencies require professional emergency medical services and arranged evacuation as early as possible. In the live system, every &quot;operator&quot; must be a pre-vetted, currently licensed clinician acting within their scope of practice; the on-scene civilian performs every physical action while the operator only guides. Statistical and protocol references reflect published battlefield and bystander-care literature as of 2026 and are context-dependent estimates, not guarantees.</div>
+</div>
+
+<div class="toc">
+  <div class="toc-h">Contents</div>
+  <ol><li>A Story from the Front</li><li>The Preparedness Gap</li><li>Guided Care: How an Untrained Person Delivers Aid</li><li>How the Operator Connects to Civilians</li><li>What Operators May and May Not Send</li><li>Where SaveVision Helps — and Where the Same Pipeline Extends</li><li>Limits, Risks, and What This System Is Not</li></ol>
+</div>
+
+<div class="summary">
+  <div class="toc-h">Executive summary</div>
+  <p><strong>SaveVision</strong> is a remote expert-guidance platform built on connected smart glasses. A frightened, untrained bystander streams their first-person view to a remote, licensed clinician who sees through their eyes and coaches them — by voice and with lightweight visual overlays — through the simple, non-invasive actions that save lives in the first minutes of trauma: stopping massive bleeding, opening an airway, and preventing shock and hypothermia. The premise is narrow but powerful: the scarce resource on a battlefield is not willing hands but trained judgment, and judgment can travel over a wire even when a medic cannot arrive in time.</p><p>This document walks from a single rescue at street level out to the system's architecture, its communications policy, its broader uses, and its hard limits. Care is organized around the <strong>MARCH</strong> priorities, bounded strictly to what a layperson can safely perform under coaching. The session rides end-to-end-encrypted, self-hosted transport with a deliberately medical-only channel, designed to leak as little metadata as possible and to degrade gracefully — down to audio-only and on-device offline checklists — when networks fail. Throughout, the design is disciplined by two bodies of constraint that are treated as load-bearing, not decorative: the limits of safe lay first aid, and the protections that international humanitarian law extends to the wounded and to those who care for them.</p>
+</div>
+
+<div class="section"><h2>A Story from the Front</h2>
+
+<p>The strike hit the market two streets over. By the time the dust thinned, Yusuf was already running — not toward anything brave, just toward the sound, because that is what the body does when it cannot think. He found a man on the ground beside an overturned cart. The man's right leg was wrong below the knee, and the ground around it was dark and growing darker. Yusuf had no medical training. He had a phone, a pair of SaveVision glasses handed out at the aid point three weeks earlier, and hands that would not stop shaking.</p>
+
+<p>He pressed the temple of the glasses. A small ring appeared in the corner of his vision, then a steady voice. "I'm Lena. I'm a trauma nurse. I can see what you see, and I'll guide you — but you are the one who acts, and I can't promise how this ends. Let's give him the best chance there is. First — are you safe where you are? Is anyone shooting, is anything still falling?" Yusuf looked up. The street was quiet, ruined but quiet. "I think so." "Good. If that changes, you move yourself to cover first. You're no use to him if you're hurt too. Now look at his leg for me."</p>
+
+<p>On the display, a soft outline traced the wound, and a single word held in the upper field: <strong>M — MASSIVE HEMORRHAGE</strong>. "That bleeding is the thing that can kill him in the next few minutes," Lena said, her voice unhurried, almost gentle. "We stop it now. Everything else waits. There's a tourniquet in the pouch on the glasses strap — black, with a windlass. Take it out."</p>
+
+<p>An arrow on the display swept up the man's thigh, as high as it could reach. "High and tight — as high up the leg as you can get it, well clear of the knee. Never across the knee or any joint, and not down on the wound itself." Yusuf threaded the strap high on the thigh, and a marker bloomed where Lena wanted the windlass. "Now twist. Keep twisting. It will hurt him — that pain means it's working. Don't stop until the bleeding stops." The man cried out. The dark flow at his shin slowed, then ceased. "Now hook the windlass and write the time on the strap, big enough to read. Whatever you do, do not loosen it. Not when he asks. Not at all — and don't cover it with anything. The hospital takes it off, not us." The overlay turned the bleeding outline from red to a calm grey. <em>M</em> dimmed; the system advanced.</p>
+
+<p>There was a second, smaller wound high on the inside of the thigh, near the groin, where a tourniquet could not reach. "That one we pack," Lena said. A new prompt read <strong>pack and press</strong>. "Push the gauze from the pouch deep into the wound, right onto where it's bleeding — don't be gentle, it's already done. Now both hands, your body weight, and press hard. Hold it for at least three minutes by the timer before you ease off to look. If it's still bleeding then, pack more on top — leave what's already in — and hold again." Yusuf pressed, and the display counted the minutes down so he would not have to guess.</p>
+
+<p>The letters moved through his field of view as Lena worked: <strong>A</strong> — the man was breathing and speaking, so his airway was clear; if he had gone quiet, she warned, she would have him assume a possible neck injury from the blast and move the man only if he had to, head, neck and body together as one unit, just enough to protect the airway. <strong>R</strong> — no chest wound, his breathing even; Lena watched for breathing that worsened over time, which she would treat as serious. <strong>C</strong> — pale, clammy, a fast thin pulse, the early shape of shock. "Keep him flat, keep him still." Then <strong>H</strong>: "He's getting cold, and cold makes the bleeding worse. Cover him — but not the tourniquet, leave that showing. Your jacket, anything. Even now, even in this heat." A foil sheet was in the pouch; Yusuf wrapped him, the timed strap still bare and visible.</p>
+
+<p>For a long moment Yusuf did not know whether any of it had been enough. The man's eyes had gone glassy. Lena kept talking anyway — keep him flat, keep talking to him, the help is coming — because that, too, was the work.</p>
+
+<p>The ambulance crew came at eleven minutes — Lena had relayed only the man's injuries and where to find him, nothing about who held the street. They found a tourniquet tight, timed and uncovered, a wound packed and held, a man cold no longer, alive. One of them looked at Yusuf's empty hands and asked who the medic was. There wasn't one. There was a frightened man, a voice, and a few words of light laid over the worst thing he had ever seen.</p>
+
+<p>This outcome is the one SaveVision is built for, but it is not one the system can promise. Not all injuries are survivable, and even flawless guided care can fail. The rest of this document explains how that voice, those overlays, and the limits around them are designed to work — and the medical, legal, and security principles that make such guidance safe to give, and honest about what it cannot do.</p></div><div class="section"><h2>The Preparedness Gap</h2>
+
+<p>In war, the difference between a survivable wound and a fatal one is usually measured in minutes, not hours. The injuries that kill most often in those first minutes are not the most complex ones. They are the ones an ordinary person standing nearby could, in principle, address: massive external bleeding and a blocked or unprotected airway. The tragedy of the modern battlefield, and of attacks against civilians, is that people die from causes that were within reach of the person already at their side.</p>
+
+<p>The evidence points one way. In the published battlefield-trauma literature, <strong>the great majority of potentially survivable deaths are due to hemorrhage</strong> — on the order of nine in ten in the most-cited analyses — bleeding that can be stopped with direct pressure, wound packing, or a tourniquet applied early and tightly. These are not surgical interventions. They require firm hands, a clear sequence of actions, and the confidence to begin. What they do not require is a degree in medicine. (The exact proportions and survival figures cited here are drawn from specific battlefield studies and are context-dependent estimates, not universal constants.)</p>
+
+<h3>The first ten minutes belong to the bystander</h3>
+
+<p>Trauma care is governed by hard biological deadlines. Clinicians speak of the <em>golden hour</em> — the window in which definitive care must reach a casualty to give them the best chance of survival — and, more urgently, the <em>platinum ten minutes</em>, the opening interval in which a life is most often won or lost. The problem is that professional help rarely arrives inside that window. Emergency medical services, where they function at all, average on the order of ten minutes to reach a patient. In a contested or besieged area, that interval stretches far longer or never closes.</p>
+
+<p>This produces a simple and brutal arithmetic: <strong>during the minutes that matter most, the only available caregiver is whoever is already there.</strong> Early hemorrhage control, applied before shock sets in, is associated with substantially improved odds of survival. The intervention that saves the most lives is also the one most likely to be delivered too late, too loosely, or not at all.</p>
+
+<h3>Why people who could act, don't</h3>
+
+<p>The gap is not primarily one of supplies or even of access. It is a gap in <strong>knowledge, sequence, and nerve</strong>. The actions that save lives in the platinum ten minutes are coachable, and the mistakes that cost lives are equally coachable:</p>
+
+<ul>
+<li><strong>Freezing entirely.</strong> Doing nothing is the most common fatal error. Faced with catastrophic injury, an untrained person who does not know where to start often does not start at all.</li>
+<li><strong>Applying a tourniquet too late, too loosely, or in the wrong place</strong> — over a joint, or never tightened enough to stop the bleeding and eliminate the pulse beyond the wound.</li>
+<li><strong>Loosening or removing a tourniquet</strong> out of fear of harming the limb, restarting the very bleed that was controlled.</li>
+<li><strong>Interrupting pressure too soon to "check"</strong> a wound, packing too shallowly, or failing to pack onto the actual bleeding point.</li>
+<li><strong>Ignoring the cascade</strong> — failing to prevent hypothermia after bleeding is controlled, which worsens clotting and feeds the lethal triad that follows uncontrolled blood loss.</li>
+</ul>
+
+<p>Every item on that list is a decision, not a procedure. Each one is something a calm, knowledgeable voice could correct in real time — if such a voice were present. In most cases it is not. Trained combat medics are scarce, spread thin across wide fronts, and concentrated exactly where the casualties are heaviest, which is to say where they are most outnumbered. The expertise exists; it is simply not standing next to the wounded.</p>
+
+<h3>The vision: lend the bystander a professional's eyes and brain</h3>
+
+<p>SaveVision is built on a single premise: <strong>the scarce resource is not willing hands, but trained judgment — and judgment can travel over a wire.</strong> The bystander is already present and already motivated. What they lack is what to do, in what order, and the steady reassurance to keep doing it under pressure. A remote medical professional has exactly that, and almost never the ability to be physically present in time.</p>
+
+<p>SaveVision closes the distance. Through connected smart glasses, it places a licensed medic or physician behind the eyes of the person on scene. The professional sees what the bystander sees, in real time, and guides them through the care the situation demands — control the bleeding here, pack deeper, note the time on the tourniquet, move the patient only if you must, keep the pressure on. The on-scene civilian remains the one who acts; the remote professional supplies the perception and the decisions. In effect, <strong>SaveVision turns any connected bystander into a competent, guided first responder</strong>, transforming the platinum ten minutes from a period of helpless waiting into the most consequential phase of care. It is a bridge to professional care, not a substitute for it: activating EMS and arranging evacuation as early as possible remains part of every session.</p>
+
+<h3>The wounded are protected — and so is the act of caring for them</h3>
+
+<p>SaveVision rests on a principle older than any of its technology: under international humanitarian law, <strong>the wounded and sick must be respected, protected, and cared for, without adverse distinction</strong>. Medical priority is set by clinical need alone — never by which side a casualty belongs to. A guided helper may find themselves over a neighbour, a stranger, or an enemy combatant who is <em>hors de combat</em> — wounded, surrendered, or captured; in every case the same duty of care applies, and the system is designed never to triage or withhold aid by allegiance.</p>
+
+<p>Equally important, and often misunderstood: <strong>giving or receiving first aid does not make a civilian a participant in hostilities and does not forfeit their protected status.</strong> Rendering medical care to the wounded is a protected humanitarian act, not direct participation in hostilities. A bystander who picks up these glasses to save a life remains a protected civilian. The only thing that could change that picture is the transmission of operationally useful military information over the link — and the system's strictly medical-only channel, described later, exists precisely so that line is never crossed.</p>
+
+<h3>An honest accounting of the boundary</h3>
+
+<p>SaveVision is deliberately and permanently a coach for non-invasive care, not a remote operating theatre. A guided bystander can secure a scene and call for help, control massive bleeding, place a casualty in the recovery position, perform hands-only CPR, seal an open chest wound, treat for shock, and prevent hypothermia. They cannot and will not be guided to perform needle decompression, surgical airways, the insertion of airway devices, the administration of drugs or fluids, or the removal of impaled objects. These belong to trained providers, and the system's guidance stays firmly within what a layperson can safely execute.</p>
+
+<p>The honest case for SaveVision is therefore narrow but powerful. It does not promise to save everyone, and it cannot guarantee a good outcome even when every action is done correctly. It addresses the specific, well-documented category of deaths that are preventable at the scene by simple actions — and it attacks the real reason those actions so often fail to happen: <strong>the absence, in the first minutes, of someone who knows what to do.</strong> Where a life is lost to a bleed that could have been stopped or an airway that could have been opened, the missing element was rarely courage or proximity. It was guidance. SaveVision exists to deliver that guidance at the speed the wound demands.</p></div><div class="section"><h2>Guided Care: How an Untrained Person Delivers Aid</h2>
+
+<p>The system pairs a frightened, untrained person at the scene with a licensed medic or physician who is somewhere safe and may be hundreds of kilometres away. The helper wears smart glasses with a forward-facing camera, a speaker, and a transparent display. The operator sees exactly what the helper sees through a point-of-view (POV) video feed, speaks to them hands-free, and draws lightweight visual cues directly onto the helper's field of view. The helper's hands stay free for one job: doing what they are told. The operator never touches the patient and never makes a tactical decision; they translate a clinical assessment into the smallest possible physical actions a layperson can perform. Care is owed to every wounded person without adverse distinction, set by clinical need alone.</p>
+
+<p>Care is organised around <strong>MARCH</strong> — Massive hemorrhage, Airway, Respiration, Circulation, Hypothermia — because the earliest letters kill fastest. The great majority of preventable battlefield deaths are caused by bleeding, so stopping massive hemorrhage is the single most impactful coached action. Before any of this, the operator confirms <strong>scene safety</strong>: a rescuer who becomes a casualty helps no one, and in an active-threat context moving to cover precedes care.</p>
+
+<h3>M — Massive hemorrhage</h3>
+<p><em>Operator sees:</em> spurting or pooling blood, a limb wound, the helper's hands. <em>Operator says:</em> "Press hard here, both hands, lean your weight in." <em>Overlays:</em> a red marker pins the bleeding point; an arrow points <strong>high up the limb</strong> for tourniquet placement; a timer appears the moment a tourniquet is on. <em>Helper does:</em> applies direct pressure, or a commercial windlass tourniquet placed <strong>high and tight — as high up the limb as possible, well clear of any joint, never over a joint and never over the wound itself</strong> — tightened until the bleeding stops and the pulse beyond the wound is gone (pain is expected). For wounds a tourniquet cannot reach (groin, armpit, junctions), the helper packs gauze deep onto the bleeding point and holds <strong>firm direct pressure with full body weight for at least three minutes</strong> before easing off to check; if still bleeding, pack more on top — never removing what is already packed — and hold again. The operator coaches a second tourniquet above the first if one is not enough.</p>
+<p><strong>Standing tourniquet rule (never waived):</strong> once applied, the helper must <strong>never loosen or remove the tourniquet, and never cover it</strong> with clothing or a blanket. Leave it visible, write the time of application on it, and hand the casualty over with the tourniquet showing. Only a hospital provider removes it.</p>
+
+<h3>A — Airway</h3>
+<p><em>Operator sees:</em> the patient's face, chest rise, responsiveness. <em>Operator says:</em> "Only move them if you must — then keep the head, neck and body in one line and roll them as a single unit." <em>Overlays:</em> a curved arrow demonstrates the log-roll into the recovery position; a checklist item ticks once the airway is open. <em>Helper does:</em> for an unresponsive casualty who is breathing normally, the helper opens the airway. <strong>In blast, fall or vehicle trauma a neck/spine injury is assumed</strong>, so the helper moves the casualty only when it is necessary to protect the airway (for example, risk of choking or vomiting), and when they must move them, keeps head, neck and body moving together as one unit. A pregnant patient is rolled onto the <strong>left</strong> side. No airway device is ever inserted.</p>
+
+<h3>R — Respiration</h3>
+<p><em>Operator sees:</em> a chest wound, breathing effort. <em>Operator says:</em> "Cover this hole, tape it on three sides." <em>Overlays:</em> a marker on the wound; an outline showing a vented chest seal or airtight material taped on three sides. <em>Helper does:</em> seals an open chest wound. The operator watches for and <strong>recognises a possible tension pneumothorax by what the helper can actually report — progressively worsening breathing and worsening shock in someone with a chest injury</strong> — and prioritises urgent evacuation. (Distended neck veins are a classic textbook sign but are <em>frequently absent</em> in a casualty who is also bleeding heavily, so their absence does not rule it out and they are not required for the operator to act.) Needle decompression is never coached; it is for trained providers only.</p>
+
+<h3>C — Circulation</h3>
+<p><em>Operator sees:</em> skin colour, responsiveness, breathing. <em>Operator says:</em> "Heel of your hand on the centre of the chest — push hard and fast, like this beat." <em>Overlays:</em> a target on the sternum and a pulsing metronome at 100–120 beats per minute. <em>Helper does:</em> hands-only CPR (no rescue breaths) if the patient is unresponsive and not breathing normally — about two inches deep, full recoil, no interruption — while someone is sent for an AED. Two safeguards govern this step:</p>
+<ul>
+<li><strong>Control massive bleeding first.</strong> CPR cannot work while the casualty is still bleeding out, so any major hemorrhage must be stopped before or alongside starting compressions.</li>
+<li><strong>Treat gasping as not breathing.</strong> Occasional gasping or gurgling after trauma is <em>not</em> normal breathing; if the helper is unsure whether the casualty is breathing normally, they treat them as not breathing and begin compressions.</li>
+</ul>
+<p>If the patient has a pulse and is breathing, the helper instead treats for shock: lay flat, keep still, keep calm.</p>
+
+<h3>H — Hypothermia</h3>
+<p><em>Operator sees:</em> the casualty on cold ground, exposed skin. <em>Operator says:</em> "Get them off the ground, wrap everything you have around them — but leave any tourniquet showing." <em>Overlays:</em> a checklist confirming insulation above and below the patient. <em>Helper does:</em> insulates aggressively with blankets, clothing, or foil even in warm weather, because cold worsens bleeding (the lethal triad), while keeping any applied tourniquet uncovered and visible. The helper keeps the patient flat, still, and reassured until EMS arrives.</p>
+
+<table>
+  <thead>
+    <tr><th>MARCH step</th><th>Operator guidance</th><th>Helper action</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Massive hemorrhage</td><td>Mark bleeding point; coach pressure, tourniquet high and tight, timing, wound packing for 3+ minutes, second tourniquet</td><td>Press with body weight; apply/tighten tourniquet high and tight; pack gauze and hold 3+ min; never loosen, cover, or peek early</td></tr>
+    <tr><td>Airway</td><td>Move only if needed; coach head-neck-body log-roll; left side if pregnant</td><td>Open airway; assume spine injury in blast/fall; move as one unit only to protect airway; insert no devices</td></tr>
+    <tr><td>Respiration</td><td>Locate chest wound; coach three-sided seal; recognise worsening breathing/shock and prioritise evacuation</td><td>Seal open chest wound; report breathing changes</td></tr>
+    <tr><td>Circulation</td><td>Confirm bleeding is controlled first; mark sternum; set 100–120/min tempo; treat gasping as not breathing; coach shock care or send for AED</td><td>Hands-only CPR (no breaths) if not breathing normally; otherwise lay flat and still for shock</td></tr>
+    <tr><td>Hypothermia</td><td>Confirm insulation above and below; keep tourniquet visible; keep patient flat and calm</td><td>Get off cold ground; wrap fully but leave tourniquet showing; keep still and reassured</td></tr>
+  </tbody>
+</table>
+
+<h3>The boundary: coached versus out of scope</h3>
+<p>Under coaching, a layperson can safely secure the scene, call for help, control bleeding, open and protect an airway, perform hands-only CPR, seal a chest wound, prevent hypothermia, treat shock, and report the patient's condition. The following are strictly <strong>out of scope</strong> and must never be coached to an untrained helper: needle decompression, surgical airways, airway adjuncts, intravenous lines, drugs or fluids, deep probing or removal of impaled objects, removing or loosening (or covering) an applied tourniquet, and moving a suspected spinal-injury casualty without a clear airway reason.</p>
+
+<blockquote>The operator's voice replaces missing training, not missing tools or qualifications. The single greatest risk is not error but inaction; the system exists to convert a bystander's first ten minutes — when the bystander <em>is</em> the care — into competent, bounded, life-saving hands. Even so, not every injury is survivable, and no amount of correct guidance can guarantee the outcome.</blockquote></div><div class="section"><h2>How the Operator Connects to Civilians</h2>
+
+<p>The connection layer is where SaveVision turns a frightened bystander and a distant clinician into a single working unit. Its job is to make that link fast to establish, hard to misuse, and resilient under the worst possible network conditions. The civilian wears or holds the camera (smart glasses or a phone) and publishes their point of view; a clinician (the <em>operator</em>) joins from elsewhere, sees what the civilian sees, and pushes spoken and on-screen guidance back. In production the entire session — POV video, audio, and the doctor's guidance — rides over <strong>Matrix</strong>, an open, end-to-end-encrypted, self-hostable protocol, so there is no third-party cloud in the path. Each emergency is a single encrypted Matrix room: the live call runs as a MatrixRTC session, and the doctor's guidance is carried as custom encrypted room events. Crucially, the data path is <strong>one-way: doctor → wearer.</strong> The wearer only publishes their live POV and audio and never sends application data back, an asymmetry enforced by the room's power levels. Everything below is designed around one hard constraint: the channel is strictly medical, and the link itself is a threat surface to be minimised.</p>
+
+<h3>Starting a session: "press to call for help"</h3>
+
+<p>For a civilian under stress, the entry point must be a single, unmistakable action. A large <strong>"Call for help"</strong> control is the only thing required to begin. Pressing it does four things in sequence, none of which the civilian needs to understand:</p>
+
+<ul>
+<li>The device opens its camera and microphone and begins capturing a local point-of-view stream (held locally until an operator joins).</li>
+<li>The app requests a new <strong>room</strong> — a fresh encrypted Matrix room (or, in the local development harness, a signaling-server room).</li>
+<li>The system returns a <strong>short room code</strong> — a few human-readable characters — and places the request into the operator queue.</li>
+<li>The civilian's screen shows that code large and clearly, alongside a calm status line ("Connecting you to a medic"). The code can be read aloud over a parallel phone line if data fails, so a session can still be brokered by voice.</li>
+</ul>
+
+<p>The short code is a convenience and a fallback, not the security boundary. It lets a session be re-established or voice-brokered quickly, but it must be paired with server-side controls (single active operator per room, short code lifetime, rate limiting) so that a guessed or overheard code cannot let a stranger silently watch a casualty.</p>
+
+<h3>Matching and assigning an operator</h3>
+
+<p>When a room is created it enters a triage queue rather than ringing a specific person, and is routed to an available, verified clinician. Routing should consider, in priority order: clinical availability, language match (critical for step-by-step coaching), and — only where it can be inferred coarsely and consensually — region, so the casualty reaches someone who understands the local evacuation reality. Because the dominant battlefield threat is hemorrhage, the queue is treated as time-critical: the design target is that an operator joins within the first minutes, the window in which the bystander <em>is</em> the care.</p>
+
+<p>If no operator is immediately free, the civilian is never left staring at a spinner. The app falls back to <strong>offline guidance</strong> (see below) so that bleeding control, airway protection, and hands-only CPR can begin without waiting. When an operator does join, they inherit any context the civilian has already provided and the guided care continues seamlessly.</p>
+
+<h3>Identity and trust: proving the operator is a real clinician</h3>
+
+<p>The civilian is being asked to act on the instructions of a voice they cannot see, and to expose live video of a wounded person. Trust must therefore run in both directions and be earned by design, not by branding.</p>
+
+<ul>
+<li><strong>Operator verification.</strong> Only pre-vetted, credentialed clinicians may ever be placed in the matching pool. Verification (license check, scope-of-practice confirmation) happens at onboarding, long before any session, and operator accounts authenticate with strong credentials each time they go on duty. The civilian's app displays a clear, plain trust indicator when connected to a verified operator.</li>
+<li><strong>Scope and standard of care.</strong> The operator is, in legal terms, providing care in a professional capacity and is held to a higher standard than a Good Samaritan layperson. The clinician must state plainly that they are <em>guiding</em>, not physically treating, and that the on-scene civilian performs every action. Informed consent — including the model's limits (latency, no physical exam, possible dropouts, no guarantee of outcome) — should be obtained where the casualty's condition allows.</li>
+<li><strong>Care without adverse distinction.</strong> Operators set medical priority by clinical need alone and never withhold or down-triage care based on a casualty's perceived side. The wounded and sick — including enemy combatants who are <em>hors de combat</em> — are owed respect, protection, and care equally.</li>
+<li><strong>The channel is medical-only.</strong> Operators may transmit first-aid instructions, triage prioritisation, reassurance, and shelter-versus-evacuate decisions framed around the patient's condition. They must <strong>never</strong> transmit enemy positions, troop movements, targeting coordinates, or any operationally useful military information. Giving first aid does not forfeit a civilian's protected status, but transmitting operationally useful information could — and would endanger everyone present. The channel should be auditable precisely so its medical-only character can be demonstrated.</li>
+</ul>
+
+<h3>Protecting the civilian's identity and location</h3>
+
+<p>In a conflict zone the metadata of a connection — who, when, where, and patterns of movement — can be as dangerous as its content, even when the content is fully encrypted. The connection layer is built to leak as little as possible:</p>
+
+<ul>
+<li><strong>End-to-end encryption</strong> for all media and the guidance data, carried over Matrix's Olm/Megolm encryption, so that not even the homeserver operator can read the session.</li>
+<li><strong>No precise geolocation by default.</strong> The system avoids capturing or transmitting exact coordinates. Where the operator needs to reason about evacuation, location is shared at the coarsest useful granularity and only with consent.</li>
+<li><strong>Minimal collection and short retention.</strong> Identities are not required to start a session; the civilian is reachable through the room, not a personal account. Logs are minimised and expired quickly.</li>
+<li><strong>Civilian and medical character preserved.</strong> The service, its hosting (a self-hosted homeserver, deployable in-country), and its traffic should be unambiguously civilian. The medical link must never be routed through or co-located with military networks, which would risk contaminating its protected character.</li>
+<li><strong>No misuse of protected symbols.</strong> The system must never use the red cross, red crescent, or red crystal emblem, or "medical" branding, as cover for anything non-medical — feigning protected status is perfidy and a grave breach of the law.</li>
+</ul>
+
+<h3>Session lifecycle</h3>
+
+<p>A session moves through a small number of well-defined states, each with explicit behaviour so that nothing about the connection is ambiguous to either party.</p>
+
+<table>
+<thead>
+<tr><th>Phase</th><th>What happens</th><th>What the civilian sees</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Connect</strong></td><td>Room created, operator matched and verified, the encrypted call and one-way guidance channel established.</td><td>"Connecting" → "Medic connected," with the trust indicator.</td></tr>
+<tr><td><strong>Active guidance</strong></td><td>POV video and audio flow to the operator; spoken and on-screen guidance flow back, one-way, over the guidance channel.</td><td>Live coaching; clear visual cues overlaid on screen.</td></tr>
+<tr><td><strong>Reconnect</strong></td><td>If the app is backgrounded (e.g., to put the phone on speaker) or the link drops, the session is held open briefly and re-established to the same room and operator, resuming where it left off.</td><td>"Reconnecting…" then automatic resumption; offline guidance fills the gap.</td></tr>
+<tr><td><strong>Handoff</strong></td><td>An operator can transfer the room to another verified clinician (shift change, escalation to a specialist) with a structured summary so context is not lost; the new operator is announced.</td><td>"Handing you to another medic," then the new trust indicator.</td></tr>
+<tr><td><strong>End</strong></td><td>Either party ends the session; media stops, the room and short code are invalidated, and minimal records expire on schedule.</td><td>"Session ended," with simple aftercare/next-step prompts.</td></tr>
+</tbody>
+</table>
+
+<p>Backgrounding deserves special attention: the very first instruction in a real emergency is often to call EMS and put the phone on speaker, which on many devices backgrounds the app. The lifecycle must treat a backgrounded session as <em>paused, not lost</em>, holding the room open and resuming media when the app returns to the foreground.</p>
+
+<h3>Connectivity realities in war</h3>
+
+<p>Bandwidth in a conflict zone is scarce, contested, and intermittent. The connection layer degrades gracefully rather than failing outright, on the principle that <em>some</em> guidance must always reach the civilian.</p>
+
+<ul>
+<li><strong>Adaptive video.</strong> Resolution and frame rate scale down automatically as the link weakens, prioritising a usable view of the wound site over full-quality video.</li>
+<li><strong>Audio-only fallback.</strong> When video cannot be sustained, the session drops to audio-only and the operator coaches by voice. This is a real clinical fallback, not a failure mode: dispatcher-assisted CPR by voice measurably raises bystander action and survival, and the same holds for hemorrhage control — though video, where available, improves outcomes further and should be preferred.</li>
+<li><strong>Resilient signaling.</strong> Brief outages are absorbed by the reconnect logic; the short room code allows a session to be re-brokered, including by reading the code over a separate voice line if the data path is down entirely.</li>
+<li><strong>Offline checklists.</strong> If no operator can be reached and the network is unusable, the device presents pre-loaded, on-device guidance organised by the MARCH priorities — <strong>M</strong>assive hemorrhage first (direct pressure; wound packing held at least three minutes; tourniquet placed high and tight, time noted, never loosened or covered), <strong>A</strong>irway (open it; assume spine injury in blast/fall and move only as needed, as one unit), <strong>R</strong>espiration (seal an open chest wound; recognise but never needle a tension pneumothorax), <strong>C</strong>irculation (control bleeding first; hands-only CPR at 100–120/min if not breathing normally; treat gasping as not breathing; otherwise shock care), and <strong>H</strong>ypothermia prevention. These checklists let care begin in the platinum first minutes and continue if the link is lost mid-session.</li>
+</ul>
+
+<blockquote>
+<p>The connection is engineered to assume failure. Whatever the network does, the casualty should still be receiving the single most important coached action for their injury — controlling massive bleeding — within seconds of the civilian pressing one button. The link is a bridge to professional care; it never replaces calling EMS and arranging evacuation.</p>
+</blockquote>
+
+<h3>Connection flow at a glance</h3>
+
+<ol>
+<li>The civilian presses <strong>"Call for help."</strong> The app opens the camera and microphone and captures their point of view locally.</li>
+<li>The app requests a room, which returns a <strong>short room code</strong> and places the request in the operator queue.</li>
+<li>The room is routed to an available, <strong>verified clinician</strong> by availability and language; if none is free, on-device offline guidance starts immediately.</li>
+<li>The operator joins the room; the app confirms a <strong>verified operator</strong> and consent is acknowledged where possible.</li>
+<li>A direct, <strong>end-to-end encrypted</strong> link is negotiated over Matrix: POV video and audio to the operator, one-way guidance back to the wearer.</li>
+<li>The operator coaches step by step, the link <strong>adapts</strong> (reduced video, then audio-only) as bandwidth allows, and <strong>reconnects</strong> automatically after drops or backgrounding.</li>
+<li>If needed, the operator performs a <strong>handoff</strong> to another verified clinician with a structured summary.</li>
+<li>Either party <strong>ends</strong> the session; the room and code are invalidated and minimal records expire on schedule.</li>
+</ol></div><div class="section"><h2>What Operators May and May Not Send</h2>
+
+<p>This section defines the communications policy that governs every exchange between a licensed operator (the remotely connected medic or physician) and the on-scene helper (an untrained civilian wearing the smart glasses). The policy exists for two inseparable reasons. First, it keeps the guidance <strong>clinically safe</strong>, bounded to what an untrained person can perform without harm. Second, it keeps the link <strong>legally protected</strong> — a strictly medical channel that preserves the civilian character of both the helper and the service under international humanitarian law. Because the data path is one-way (doctor → wearer), this policy is overwhelmingly a discipline on what the <em>operator</em> transmits.</p>
+
+<h3>The governing principles</h3>
+<ul>
+<li><strong>Medical-only.</strong> Every transmission must serve the immediate care of the casualty in front of the helper. Reassurance, triage prioritisation, and shelter-versus-evacuate decisions framed around the patient's clinical condition are in scope. Anything that is not about treating this patient is not.</li>
+<li><strong>Care without adverse distinction.</strong> The operator prioritises by clinical need alone and never withholds, delays, or down-triages care because of who the casualty is or which side they are believed to be on. The wounded and sick — including enemy combatants who are <em>hors de combat</em> — are owed care equally.</li>
+<li><strong>Within lay scope.</strong> The operator only ever coaches actions a layperson can safely perform (the MARCH set). Invasive or provider-only interventions are never transmitted, however dire the situation.</li>
+<li><strong>Truthful and bounded.</strong> The operator states clearly that they are guiding and not physically treating, that the helper performs every action, and that no outcome can be guaranteed.</li>
+</ul>
+
+<h3>What an operator MAY send</h3>
+<ul>
+<li><strong>First-aid instructions</strong> within lay scope: scene-safety checks, direct pressure, high-and-tight tourniquet placement and timing, wound packing held at least three minutes, airway protection (move only if needed, as one unit), three-sided chest seals, hands-only CPR, shock and hypothermia care.</li>
+<li><strong>Visual guidance</strong> rendered on the HUD: a banner of short text (shown in red when it is a stop/safety instruction), freehand <strong>drawings</strong> over the POV with normalised coordinates, an example <strong>image</strong> or frozen frame, and a direction <strong>arrow with a label</strong> for evacuation.</li>
+<li><strong>Triage and prioritisation</strong> across multiple casualties, by clinical need.</li>
+<li><strong>Reassurance and pacing</strong> — the calm voice that keeps a frightened helper acting.</li>
+<li><strong>Shelter-versus-evacuate guidance</strong> framed around the patient's condition and the helper's own safety, and the instruction to activate EMS / arrange evacuation.</li>
+</ul>
+
+<h3>What an operator MUST NOT send</h3>
+<ul>
+<li><strong>Any operationally useful military information</strong> — enemy positions, troop or vehicle movements, targeting or grid coordinates, battle-damage assessment, or intelligence of any kind. This is the bright line: such content can constitute direct participation in hostilities, stripping the civilian helper of protected status and endangering everyone on scene. Giving first aid never forfeits protected status; transmitting this kind of information can.</li>
+<li><strong>Out-of-scope clinical actions</strong> — needle decompression, surgical airways, airway adjuncts, IV lines, drugs or fluids, deep probing or removal of impaled objects, or any instruction to loosen, remove, or cover an applied tourniquet.</li>
+<li><strong>Discriminatory triage</strong> — any instruction to withhold or deprioritise care based on a casualty's perceived allegiance.</li>
+<li><strong>Misuse of protected emblems or status</strong> — invoking the red cross/crescent/crystal or a medical pretext for any non-medical end (perfidy).</li>
+<li><strong>Anything that compromises the helper's safety</strong> — directing a helper into danger when self-protection and moving to cover should come first.</li>
+</ul>
+
+<table>
+<thead>
+<tr><th>Category</th><th>May send</th><th>Must not send</th></tr>
+</thead>
+<tbody>
+<tr><td>Clinical</td><td>Lay-scope MARCH first aid, drawings/images/arrows that support it</td><td>Invasive/provider-only procedures; loosen/cover a tourniquet</td></tr>
+<tr><td>Triage</td><td>Prioritisation by clinical need; reassurance and pacing</td><td>Withholding or down-triaging care by allegiance</td></tr>
+<tr><td>Movement</td><td>Shelter-vs-evacuate framed on patient condition; activate EMS</td><td>Directing the helper into avoidable danger</td></tr>
+<tr><td>Information</td><td>Coarse, consensual location only as needed for evacuation</td><td>Enemy positions, movements, targeting/coordinates, any intelligence</td></tr>
+<tr><td>Identity</td><td>Plain statement that the operator is a verified, guiding clinician</td><td>Misuse of protected emblems; feigning protected status</td></tr>
+</tbody>
+</table>
+
+<h3>Auditability and enforcement</h3>
+<p>Because the channel's protected character depends on its medical-only content, the system is designed so that character can be demonstrated. The one-way data shapes are constrained (text, drawing, image, map, clear), operators are pre-vetted and authenticate per shift, and the medical-only rule is part of onboarding and standing policy rather than a matter of individual judgment in the moment. Where any record is kept for accountability, it is minimised, encrypted, and short-lived, consistent with the data-protection posture of the connection layer.</p>
+
+<blockquote>The operator's transmissions are the system's most sensitive surface. Every word and overlay must do one job — help the helper treat the patient in front of them — and nothing else. The discipline of the channel is what lets a civilian wear these glasses into a war and remain, in fact and in law, a civilian.</blockquote></div><div class="section"><h2>Where SaveVision Helps — and Where the Same Pipeline Extends</h2>
+
+<p>SaveVision's first and defining use is medical: a remote doctor talking an untrained civilian through saving an injured person in the platinum first minutes. That is the case the whole system is engineered around, and it is the case the rest of this document describes in detail. But the underlying capability — a remote expert who sees through a bystander's eyes and guides their hands by voice and overlay — is general. The same architecture extends to other domains by swapping the expert and the guidance content, not the pipeline. The sections below sketch the primary medical scenarios and the adjacent uses that share the platform, each with its own scope limits.</p>
+
+<h3>Primary use: civilian trauma in conflict and after attacks</h3>
+<ul>
+<li><strong>Blast and shrapnel injuries.</strong> A bystander after a strike on a market, a residential block, or a transit hub — the scenario in this document's opening — guided through hemorrhage control, airway protection, chest-wound sealing, and shock/hypothermia care while EMS is summoned.</li>
+<li><strong>Gunshot wounds.</strong> Extremity and junctional bleeding controlled by tourniquet and packing; chest wounds sealed; the helper coached to watch for worsening breathing.</li>
+<li><strong>Crush and entrapment after building collapse.</strong> The helper guided to control accessible bleeding and protect the airway while keeping a possible spinal injury in mind, pending technical rescue.</li>
+<li><strong>Mass-casualty triage.</strong> One connected helper guided across several casualties, prioritising by clinical need alone, deciding who needs the tourniquet first.</li>
+</ul>
+<p>In every one of these, the same hard limits hold: care without adverse distinction, lay-scope actions only, and the system as a bridge to professional care rather than a replacement for it.</p>
+
+<h3>Beyond the front line: the same pipeline, a different expert</h3>
+<p>The platform is domain-agnostic; only the remote expert and the guidance content change. These adjacent uses inherit the same one-way, encrypted, expert-behind-the-eyes design — and each demands its own equivalent of the medical boundary, defining what a guided non-specialist may and may not be coached to do.</p>
+<ul>
+<li><strong>Evacuation and navigation.</strong> A guide steering displaced people along a safe corridor, with map arrows and bearings rendered on the wearer's display.</li>
+<li><strong>Technical and infrastructure repair.</strong> An engineer talking a non-specialist through restoring power, water, or a generator — with the expert marking the exact valve or terminal on the live view.</li>
+<li><strong>Hazard and unexploded-ordnance awareness.</strong> A specialist coaching a civilian to <em>recognise, avoid, and withdraw from</em> hazards and suspected ordnance — never to handle or disturb them, the strict analogue of the medical out-of-scope list.</li>
+<li><strong>Search and rescue.</strong> A coordinator guiding searchers through a structured area, marking what has been cleared and where to look next.</li>
+<li><strong>Civilian everyday emergencies.</strong> Outside conflict entirely, the same dispatcher-assisted model applies to bystander CPR, choking, and bleeding control before EMS arrives.</li>
+</ul>
+
+<h3>Why these uses cohere</h3>
+<p>What unites every scenario is a single shape: an expert exists, is willing to help, and cannot be physically present in time — while a motivated non-expert is already on scene and only lacks knowing what to do. SaveVision exists to close exactly that distance. The medical case is first because the stakes and the time pressure are highest there; the others follow because the problem they solve is the same one.</p>
+
+<blockquote>The architecture does not know whether the expert is a trauma nurse, an engineer, or an ordnance specialist. That is the point: one pipeline for putting trained judgment behind the eyes of whoever is already there — each domain with its own scope of what may safely be coached.</blockquote></div><div class="section"><h2>Limits, Risks, and What This System Is Not</h2>
+
+<p>An honest design states its limits as clearly as its promise. SaveVision is a narrow tool that does one thing well — it puts trained judgment behind the eyes of a bystander in the first minutes of trauma. It is not a hospital, not an operating theatre, not a guarantee, and not a substitute for professional emergency care. This section sets out the boundaries that bound the rest of the document, so that no reader, helper, or operator mistakes what the system is.</p>
+
+<h3>Clinical limits</h3>
+<ul>
+<li><strong>Non-invasive care only.</strong> Guidance is permanently bounded to actions a layperson can safely perform: scene safety, hemorrhage control, airway protection, chest-wound sealing, hands-only CPR, and shock/hypothermia care. Needle decompression, surgical airways, airway adjuncts, IV access, drugs or fluids, and removal of impaled objects are never coached.</li>
+<li><strong>No physical examination.</strong> The operator sees only what the camera shows and hears only what the helper relays. There is no palpation, no vital-sign monitoring, no imaging. Some conditions — internal bleeding, a tension pneumothorax whose neck-vein signs are absent in a bleeding patient — cannot be reliably assessed at a distance.</li>
+<li><strong>Not every injury is survivable.</strong> Even when every coached action is performed correctly and quickly, the system cannot and does not guarantee a good outcome. SaveVision improves the odds within a specific category of preventable deaths; it does not abolish death.</li>
+<li><strong>A bridge, not a destination.</strong> Bystander care buys time. Activating professional EMS and arranging evacuation as early as possible is part of every session, and definitive care still depends on the casualty reaching a provider.</li>
+</ul>
+
+<h3>Technical limits</h3>
+<ul>
+<li><strong>Connectivity is fragile.</strong> War-zone networks are scarce, contested, and intermittent. The system degrades to audio-only and to on-device offline checklists, but a complete outage can still leave the helper alone with the pre-loaded MARCH guidance.</li>
+<li><strong>Latency and dropouts.</strong> Guidance can lag or stutter; the helper must sometimes act on the last clear instruction. The design assumes failure, but it cannot eliminate it.</li>
+<li><strong>Device and power constraints.</strong> Glasses and phones run out of battery, break, or are lost. Hardware availability and distribution are real-world limits the software cannot solve.</li>
+<li><strong>Operator availability.</strong> The pool of verified clinicians is finite. The offline-first fallback exists precisely because a free operator may not be available in the first minutes.</li>
+</ul>
+
+<h3>Legal, ethical, and security limits</h3>
+<ul>
+<li><strong>The wounded are owed equal care.</strong> Under international humanitarian law the wounded and sick — including enemy combatants who are <em>hors de combat</em> — must be respected, protected, and cared for without adverse distinction, by clinical need alone.</li>
+<li><strong>First aid is a protected act.</strong> Giving or receiving first aid does not make a civilian a participant in hostilities and does not forfeit protected status. The risk runs only the other way: transmitting operationally useful military information could constitute direct participation, which is exactly why the channel is medical-only and auditable.</li>
+<li><strong>The medical character must stay clean.</strong> The service, its self-hosted infrastructure, and its traffic must remain unambiguously civilian and never co-located with military networks. The red cross/crescent/crystal emblems and any medical pretext must never be used as cover for non-medical ends — that is perfidy and a grave breach.</li>
+<li><strong>Operators carry professional duties.</strong> Operators must be currently licensed clinicians acting within scope; they are held to a professional standard of care, must disclose that they guide rather than treat, and should obtain informed consent where the casualty's condition allows. Cross-border licensing, liability, and Good-Samaritan protections vary by jurisdiction and are unsettled for remote guidance.</li>
+<li><strong>Metadata is a weapon.</strong> Even with end-to-end encryption, the pattern of a connection can endanger people. The system minimises collection, avoids precise geolocation, and expires records quickly — but no system can promise perfect anonymity in a surveilled environment.</li>
+</ul>
+
+<h3>What this system is not</h3>
+<ul>
+<li>It is <strong>not</strong> medical or legal advice, and this document creates no clinician-patient or attorney-client relationship.</li>
+<li>It is <strong>not</strong> a replacement for professional emergency medical services or evacuation.</li>
+<li>It is <strong>not</strong> a platform for any non-medical communication; the channel is strictly medical and one-way.</li>
+<li>It is <strong>not</strong> a tool that operates without a verified, licensed human clinician — the autonomy stops at offline checklists for the simplest, best-established actions.</li>
+<li>It is <strong>not</strong> a guarantee. It improves the chances of survival in a specific, well-documented category of preventable death; it does not promise to save a life.</li>
+</ul>
+
+<blockquote>SaveVision earns trust by being precise about its own edges. It claims only this: in the minutes before help arrives, a bystander who knows what to do can save a life that would otherwise be lost — and a calm, verified voice can be that knowledge. Everything beyond that edge belongs to the professionals the system is built to reach.</blockquote></div>
+
+<div class="disclaimers">
+  <h2>Key disclaimers</h2>
+  <ul><li>This is a concept document and general emergency-guidance material — not individualized medical or legal advice — and it does not create any clinician-patient or attorney-client relationship with the reader.</li><li>Not all injuries are survivable; SaveVision and its guidance do not guarantee a successful outcome even when every action is performed correctly.</li><li>Always activate professional emergency medical services (EMS) and arrange evacuation as early as possible. SaveVision and bystander care are a bridge to professional care, never a replacement for it.</li><li>Scene safety comes first: a rescuer must not become a second casualty, and must move to cover before providing care in an active-threat environment.</li><li>The on-scene civilian performs every physical action; the remote operator only guides and never physically treats the patient. In the live system, every operator must be a currently licensed clinician acting within their scope of practice.</li><li>Guidance is strictly limited to non-invasive lay care. Needle decompression, surgical airways, airway adjuncts, IV access, medications or fluids, and removal of impaled objects must never be attempted by an untrained layperson.</li><li>Place a tourniquet HIGH AND TIGHT — as high on the limb as possible, well clear of any joint, never over a joint or over the wound itself. Once applied, it must not be loosened, removed, or covered; leave it visible, mark the time of application, and let only a hospital provider remove it.</li><li>Pack wounds a tourniquet cannot reach and hold firm direct pressure for at least three minutes before checking; if still bleeding, pack more on top without removing what is already packed.</li><li>Control massive bleeding before starting CPR, and treat occasional gasping or gurgling as NOT normal breathing; if unsure, begin hands-only compressions (no rescue breaths).</li><li>If a spinal injury is possible (blast, fall, or vehicle trauma), do not move the casualty unless it is necessary to protect the airway, and then move the head, neck, and body together as a single unit.</li><li>The wounded and sick — including enemy combatants who are hors de combat — must be cared for without adverse distinction, by clinical need alone. Giving or receiving first aid is a protected act and does not forfeit a civilian&#x27;s protected status; only transmitting operationally useful military information would put that status at risk.</li><li>The communication channel is strictly medical and one-way (operator to wearer); it must never carry military information, and protected emblems or medical pretexts must never be used as cover for non-medical ends.</li><li>Statistical claims (such as the proportion of hemorrhage-related deaths or survival improvements from early bleeding control) are drawn from published, context-dependent battlefield-trauma data and are estimates, not guarantees applicable to any individual case.</li></ul>
+  <p class="footer-note">SaveVision is a concept for remote, expert-guided assistance on smart glasses. Medical guidance is the first feature; the same pipeline extends to other domains. This document does not constitute medical or legal advice.</p>
+</div>
+
+<div class="glossary">
+  <h2>Glossary</h2>
+  <dl><dt>MARCH</dt><dd>The trauma-care priority sequence used to order lifesaving actions by how fast each problem kills: Massive hemorrhage, Airway, Respiration, Circulation, Hypothermia. SaveVision structures all guided care around it, starting with bleeding control.</dd><dt>TCCC</dt><dd>Tactical Combat Casualty Care — the evidence-based battlefield trauma guidelines (including &#x27;high and tight&#x27; tourniquet placement and the MARCH sequence) that inform what SaveVision coaches a layperson to do, bounded to non-invasive actions.</dd><dt>Tourniquet</dt><dd>A device (commonly a windlass strap) tightened around a limb above a wound to stop life-threatening bleeding. SaveVision coaches placement high and tight — as high on the limb as possible, clear of joints — tightened until bleeding stops; once applied it is never loosened, removed, or covered, is marked with the time, and is removed only by a hospital provider.</dd><dt>Golden hour</dt><dd>The window — roughly the first hour after serious injury — within which reaching definitive professional care gives a casualty the best chance of survival. The more urgent &#x27;platinum ten minutes&#x27; is the opening interval in which a life is most often won or lost and in which the bystander is the only available caregiver.</dd><dt>IHL</dt><dd>International humanitarian law — the body of law governing armed conflict. Key principles for SaveVision: the wounded and sick must be cared for without adverse distinction; giving first aid does not forfeit civilian protected status; and feigning protected (medical) status or misusing protective emblems is perfidy, a grave breach.</dd><dt>Triage</dt><dd>Sorting and prioritising multiple casualties so that limited help reaches those who benefit most, by clinical need. In SaveVision, an operator may prioritise by clinical need alone and must never down-triage or withhold care based on a casualty&#x27;s perceived side.</dd><dt>CASEVAC</dt><dd>Casualty evacuation — moving a wounded person from the point of injury to higher-level medical care, often by whatever transport is available. SaveVision&#x27;s guided bystander care is a bridge that keeps a casualty alive until CASEVAC and definitive professional treatment can occur.</dd></dl>
+</div>
+
+</body></html>

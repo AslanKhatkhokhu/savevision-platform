@@ -1,0 +1,49 @@
+:root {
+  --bg: #030806;
+  --panel: rgba(0, 0, 0, 0.72);
+  --fg: #eafff5;
+  --dim: #8ea29a;
+  --accent: #00ff95;
+  --cyan: #00e0ff;
+  --danger: #ff4d4d;
+}
+
+* { box-sizing: border-box; }
+html, body { width: 600px; height: 600px; margin: 0; overflow: hidden; background: transparent; color: var(--fg); }
+body { font-family: system-ui, -apple-system, "SF Pro Display", "Segoe UI", sans-serif; }
+
+.hud {
+  width: 600px; height: 600px; position: relative; padding: 24px;
+  background: radial-gradient(90% 100% at 50% 100%, rgba(0, 255, 149, 0.08), rgba(0, 0, 0, 0.05) 58%, rgba(0, 0, 0, 0));
+}
+
+.top { display: flex; align-items: center; justify-content: space-between; }
+.brand { font-size: 24px; font-weight: 850; letter-spacing: -0.3px; text-shadow: 0 2px 8px #000; }
+.brand span { color: var(--accent); }
+.state { color: var(--cyan); border: 1px solid rgba(0, 224, 255, 0.6); border-radius: 999px; padding: 5px 12px; font-size: 13px; background: var(--panel); }
+
+.card {
+  position: absolute; left: 36px; right: 36px; top: 112px; min-height: 285px;
+  display: flex; flex-direction: column; gap: 14px; justify-content: center;
+  padding: 24px; background: var(--panel); border: 1px solid rgba(0, 255, 149, 0.5);
+  border-radius: 28px; box-shadow: 0 24px 80px #000b;
+}
+.card.urgent { border-color: var(--danger); }
+.eyebrow { color: var(--accent); text-transform: uppercase; letter-spacing: 1.8px; font-weight: 800; font-size: 13px; }
+.card.urgent .eyebrow, .card.urgent .message { color: var(--danger); }
+.message { font-size: 34px; line-height: 1.12; font-weight: 850; text-shadow: 0 2px 12px #000; }
+.image { max-width: 100%; max-height: 235px; object-fit: contain; border-radius: 18px; border: 1px solid rgba(255,255,255,.22); background: #06120d; }
+.location { display: flex; align-items: center; gap: 18px; color: var(--cyan); font-weight: 800; font-size: 26px; }
+.pin { font-size: 46px; color: var(--accent); }
+.coords { color: var(--dim); font: 17px ui-monospace, SFMono-Regular, Menlo, monospace; margin-top: 4px; }
+.arrow { position: absolute; right: 24px; bottom: 16px; color: var(--accent); font-size: 72px; transform-origin: 50% 50%; }
+
+/* live OpenStreetMap on the HUD */
+.hudmap { width: 100%; height: 210px; border-radius: 18px; overflow: hidden; border: 1px solid rgba(0,255,149,.45); background: #06120d; }
+.hudmap .leaflet-control-attribution { font-size: 8px; opacity: .5; }
+.leaflet-container { background: #06120d; font-family: inherit; }
+
+.hint { position: absolute; left: 24px; right: 24px; bottom: 18px; color: var(--dim); font-size: 14px; text-align: center; }
+
+.toast { animation: pulse 0.9s ease both; }
+@keyframes pulse { 0% { transform: scale(.98); opacity: .6; } 100% { transform: scale(1); opacity: 1; } }

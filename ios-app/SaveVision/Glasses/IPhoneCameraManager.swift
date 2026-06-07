@@ -1,0 +1,88 @@
+import AVFoundation
+import UIKit
+
+/// iPhone back-camera capture used as a fallback when no glasses are connected,
+/// so the full call pipeline can be tested without hardware. Emits `UIImage`
+/// frames via `onFrameCaptured`. Adapted from stoz3n-vision-agent.
+final class IPhoneCameraManager: NSObject {
+    private let captureSession = AVCaptureSession()
+    private let videoOutput = AVCaptureVideoDataOutput()
+    private let sessionQueue = DispatchQueue(label: "savevision.iphone-camera")
+    private let context = CIContext()
+    private var isRunning = false
+
+    var onFrameCaptured: ((UIImage) -> Void)?
+
+    func start() {
+        guard !isRunning else { return }
+        sessionQueue.async { [weak self] in
+            self?.configureSession()
+            self?.captureSession.startRunning()
+            self?.isRunning = true
+        }
+    }
+
+    func stop() {
+        guard isRunning else { return }
+        sessionQueue.async { [weak self] in
+            self?.captureSession.stopRunning()
+            self?.isRunning = false
+        }
+    }
+
+    private func configureSession() {
+        captureSession.beginConfiguration()
+        captureSession.sessionPreset = .medium
+
+        guard let camera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back),
+              let input = try? AVCaptureDeviceInput(device: camera) else {
+            NSLog("[iPhoneCamera] Failed to access back camera")
+            captureSession.commitConfiguration()
+            return
+        }
+
+        if captureSession.canAddInput(input) {
+            captureSession.addInput(input)
+        }
+
+        videoOutput.videoSettings = [
+            kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA
+        ]
+        videoOutput.setSampleBufferDelegate(self, queue: sessionQueue)
+        videoOutput.alwaysDiscardsLateVideoFrames = true
+
+        if captureSession.canAddOutput(videoOutput) {
+            captureSession.addOutput(videoOutput)
+        }
+
+        if let connection = videoOutput.connection(with: .video),
+           connection.isVideoRotationAngleSupported(90) {
+            connection.videoRotationAngle = 90
+        }
+
+        captureSession.commitConfiguration()
+        NSLog("[iPhoneCamera] Session configured")
+    }
+
+    static func requestPermission() async -> Bool {
+        let status = AVCaptureDevice.authorizationStatus(for: .video)
+        switch status {
+        case .authorized: return true
+        case .notDetermined: return await AVCaptureDevice.requestAccess(for: .video)
+        default: return false
+        }
+    }
+}
+
+extension IPhoneCameraManager: AVCaptureVideoDataOutputSampleBufferDelegate {
+    func captureOutput(
+        _ output: AVCaptureOutput,
+        didOutput sampleBuffer: CMSampleBuffer,
+        from connection: AVCaptureConnection
+    ) {
+        guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
+        let ciImage = CIImage(cvPixelBuffer: pixelBuffer)
+        guard let cgImage = context.createCGImage(ciImage, from: ciImage.extent) else { return }
+        onFrameCaptured?(UIImage(cgImage: cgImage))
+    }
+}

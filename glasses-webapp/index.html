@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <!-- The Ray-Ban Display is a small monocular HUD. Lock the viewport to a
+       fixed square so desktop preview matches the device 1:1. -->
+  <meta name="viewport" content="width=600, height=600, initial-scale=1, user-scalable=no" />
+  <title>Ray-Ban Display — Web App Starter</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Everything lives inside a fixed 600x600 stage. In Chrome DevTools,
+       set a custom device of 600 x 600 to emulate the glasses display. -->
+  <div id="stage" class="stage">
+    <!-- Screens are mounted here by the router in app.js -->
+    <main id="screen-root" class="screen-root" aria-live="polite"></main>
+
+    <!-- Persistent HUD hint bar. On real glasses this is your affordance
+         reminder; on desktop it doubles as the keyboard legend. -->
+    <footer id="hint-bar" class="hint-bar"></footer>
+  </div>
+
+  <script src="input.js"></script>
+  <script src="screens.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

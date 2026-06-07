@@ -1,0 +1,149 @@
+/* ---------------------------------------------------------------------------
+   Ray-Ban Display HUD styling.
+
+   Design constraints for a monocular heads-up display:
+   - Square 600x600 working area (Meta's documented preview size).
+   - HIGH CONTRAST: near-black background, bright monochrome-ish foreground.
+     The display is additive/transparent optics — dark pixels read as
+     "transparent", bright pixels are what the wearer actually sees.
+   - Big type, generous spacing, one focus at a time. No mouse, no scrolling
+     by hand — navigation is 4-direction + select/cancel only.
+--------------------------------------------------------------------------- */
+
+:root {
+  --hud-bg: #000000;
+  --hud-fg: #eafff5;          /* soft bright cyan-white, easy on additive optics */
+  --hud-fg-dim: #6f8b82;
+  --hud-accent: #00ffae;      /* selection / focus highlight */
+  --hud-accent-soft: rgba(0, 255, 174, 0.15);
+  --hud-danger: #ff5a5a;
+  --gap: 16px;
+  --radius: 14px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  background: #111;           /* area around the stage on desktop */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  font-family: "SF Pro Display", "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+/* The device surface. Exactly 600x600. */
+.stage {
+  position: relative;
+  width: 600px;
+  height: 600px;
+  background: var(--hud-bg);
+  color: var(--hud-fg);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  /* subtle rounded edge just for desktop framing; harmless on device */
+  border-radius: 8px;
+}
+
+.screen-root {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  padding: 28px;
+  overflow: hidden;
+}
+
+/* ----- shared screen primitives ----- */
+
+.screen-title {
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.screen-subtitle {
+  font-size: 17px;
+  color: var(--hud-fg-dim);
+  margin-bottom: 22px;
+}
+
+/* A vertical list of focusable rows. Only one row is "focused" at a time. */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1 1 auto;
+}
+
+.list-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border: 2px solid transparent;
+  border-radius: var(--radius);
+  font-size: 21px;
+  color: var(--hud-fg);
+  transition: background 80ms linear, border-color 80ms linear;
+}
+
+.list-item .icon { font-size: 24px; width: 28px; text-align: center; }
+
+/* Focused row — this is the single most important visual on a HUD. */
+.list-item.is-focused {
+  background: var(--hud-accent-soft);
+  border-color: var(--hud-accent);
+  color: var(--hud-accent);
+}
+
+/* big centered content for a detail screen */
+.detail {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+  gap: 18px;
+}
+.detail .big { font-size: 64px; font-weight: 800; color: var(--hud-accent); }
+.detail .label { font-size: 20px; color: var(--hud-fg-dim); }
+
+/* ----- hint bar (gesture/keyboard legend) ----- */
+.hint-bar {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 18px;
+  justify-content: center;
+  padding: 12px;
+  font-size: 14px;
+  color: var(--hud-fg-dim);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+.hint-bar .key {
+  color: var(--hud-fg);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 6px;
+  padding: 1px 7px;
+  margin-right: 5px;
+  font-size: 12px;
+}
+
+/* transient toast for "cancel"/feedback */
+.toast {
+  position: absolute;
+  left: 50%;
+  bottom: 70px;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.85);
+  border: 1px solid var(--hud-accent);
+  color: var(--hud-accent);
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 15px;
+  opacity: 0;
+  transition: opacity 120ms linear;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; }

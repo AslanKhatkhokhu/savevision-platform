@@ -1,0 +1,21 @@
+# App Store Connect / Developer Portal identifiers for SaveVision.
+
+app_identifier("io.example.savevision")
+
+# Prefer explicit env vars in CI. Locally, fall back to the gitignored
+# SaveVision/Secrets.xcconfig so the Apple Team ID stays out of git.
+def xcconfig_value(key)
+  path = File.expand_path("../SaveVision/Secrets.xcconfig", __dir__)
+  return nil unless File.exist?(path)
+
+  File.foreach(path) do |line|
+    next unless line =~ /^\s*#{Regexp.escape(key)}\s*=\s*(.+?)\s*$/
+    value = Regexp.last_match(1).strip
+    return nil if value.empty? || value.start_with?("REPLACE_WITH")
+    return value
+  end
+  nil
+end
+
+team_id(ENV["FASTLANE_TEAM_ID"] || ENV["DEVELOPMENT_TEAM"] || xcconfig_value("DEVELOPMENT_TEAM"))
+itc_team_id(ENV["FASTLANE_ITC_TEAM_ID"]) if ENV["FASTLANE_ITC_TEAM_ID"]

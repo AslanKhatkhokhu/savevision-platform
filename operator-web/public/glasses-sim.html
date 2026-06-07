@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SaveVision — Glasses (wearer simulator)</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    .code-in{background:#0b0f0d;border:1px solid #243040;color:#eafff5;border-radius:8px;padding:7px 9px;font-family:ui-monospace,monospace;text-transform:uppercase;width:100px;}
+    #hudmap{position:absolute;inset:0;display:none;z-index:3;}
+    .hudmap-lbl{position:absolute;top:0;left:0;right:0;z-index:4;color:#00ff95;font-weight:700;padding:10px 14px;background:linear-gradient(#000c,#0000);display:none;}
+    .leaflet-control-attribution{font-size:8px;opacity:.5;}
+    /* Simulates the Ray-Ban Display HUD + the Meta Neural Band input model.
+       The wearer publishes POV (webcam here) and only RECEIVES doctor guidance;
+       gestures let the wearer interact LOCALLY with what was sent (browse the
+       doctor's images, zoom a diagram, acknowledge/dismiss). No data is sent
+       back to the doctor — input stays on the glasses. */
+    :root { --hud: #00ff95; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #111; color: #eafff5; font-family: system-ui, -apple-system, sans-serif;
+           min-height: 100vh; display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 18px; }
+    .bar { display: flex; align-items: center; gap: 16px; }
+    .bar h1 { font-size: 16px; font-weight: 700; }
+    .code { font-family: ui-monospace, monospace; font-size: 22px; letter-spacing: 4px; color: var(--hud); }
+    button { background: var(--hud); color: #03110b; border: none; border-radius: 8px; padding: 8px 14px; font-weight: 600; cursor: pointer; }
+
+    /* The 600x600 glasses display. Black = transparent on real additive optics. */
+    .glasses { position: relative; width: 600px; height: 600px; max-width: 92vw; max-height: 92vw;
+               background: #000; border-radius: 10px; overflow: hidden; outline: 1px solid #ffffff14; }
+    #pov { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    #overlay { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+    /* instruction banner */
+    .banner { position: absolute; left: 0; right: 0; top: 0; padding: 14px 18px;
+              background: linear-gradient(#000c, #0000); font-size: 22px; font-weight: 700;
+              text-shadow: 0 1px 3px #000; transition: opacity .2s; }
+    .banner.danger { color: #ff6b6b; }
+    .banner:empty { opacity: 0; }
+
+    /* example image / frozen frame inset */
+    .imgcard { position: absolute; right: 12px; bottom: 12px; width: 200px; max-width: 45%;
+               border: 2px solid var(--hud); border-radius: 8px; overflow: hidden; background: #000; display: none; }
+    .imgcard.focus { outline: 3px solid var(--hud); }
+    .imgcard img { display: block; width: 100%; }
+    .imgcard .cap { font-size: 11px; padding: 3px 6px; color: var(--hud); background: #000a; display: flex; justify-content: space-between; gap: 6px; }
+
+    /* fullscreen "study" view of a diagram (index-pinch to open) */
+    .fs { position: absolute; inset: 0; background: #000d; display: none; align-items: center; justify-content: center; flex-direction: column; gap: 8px; }
+    .fs img { max-width: 92%; max-height: 80%; transform: scale(var(--z, 1)); transition: transform .15s; }
+    .fs .fscap { color: var(--hud); font-size: 14px; }
+
+    /* direction / map widget */
+    .compass { position: absolute; left: 12px; bottom: 12px; width: 96px; height: 96px; display: none;
+               align-items: center; justify-content: center; }
+    .compass .ring { position: absolute; inset: 0; border: 2px solid #ffffff44; border-radius: 50%; }
+    .compass .arrow { font-size: 46px; color: var(--hud); transition: transform .2s; }
+    .compass .lbl { position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%);
+                    white-space: nowrap; font-size: 12px; color: var(--hud); }
+
+    /* Neural Band feedback: gesture pill + acknowledge flash */
+    .gesture { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%) translateY(8px);
+               background: #000b; border: 1px solid var(--hud); color: var(--hud); padding: 5px 12px;
+               border-radius: 999px; font-size: 13px; opacity: 0; transition: opacity .12s, transform .12s; pointer-events: none; }
+    .gesture.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .ack { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+           font-size: 40px; font-weight: 800; color: var(--hud); opacity: 0; pointer-events: none; }
+    .ack.show { animation: pop .9s ease; }
+    @keyframes pop { 0%{opacity:0; transform:scale(.6)} 25%{opacity:1; transform:scale(1)} 100%{opacity:0; transform:scale(1.1)} }
+
+    .hint { color: #6f8b82; font-size: 13px; text-align: center; max-width: 600px; }
+    .legend { display: flex; flex-wrap: wrap; gap: 8px 14px; justify-content: center; font-size: 12px; color: #9fb4ad; }
+    .legend b { color: #eafff5; font-weight: 600; }
+    kbd { background: #1c2430; border: 1px solid #34404d; border-radius: 5px; padding: 1px 6px; font-family: ui-monospace, monospace; color: #eafff5; }
+  </style>
+</head>
+<body>
+  <div class="bar">
+    <h1>SaveVision — Glasses (wearer)</h1>
+    <button id="startBtn">Call for help</button>
+    <span class="code" id="code"></span>
+    <span style="color:#6f8b82">or</span>
+    <input id="joinCode" class="code-in" placeholder="case code" maxlength="6" />
+    <button id="joinBtn">Connect to case</button>
+  </div>
+
+  <div class="glasses" id="glasses" tabindex="0">
+    <video id="pov" autoplay playsinline muted></video>
+    <canvas id="overlay"></canvas>
+    <div id="hudmap"></div>
+    <div class="hudmap-lbl" id="hudmapLbl"></div>
+    <div class="banner" id="banner"></div>
+    <div class="imgcard" id="imgcard">
+      <img id="imgcardImg" alt="" />
+      <div class="cap"><span id="imgcardCap"></span><span id="imgcardCount"></span></div>
+    </div>
+    <div class="compass" id="compass">
+      <div class="ring"></div>
+      <div class="arrow" id="arrow">↑</div>
+      <div class="lbl" id="lbl"></div>
+    </div>
+    <div class="fs" id="fs"><img id="fsImg" alt="" /><div class="fscap" id="fsCap"></div></div>
+    <div class="ack" id="ack">✓ Got it</div>
+    <div class="gesture" id="gesture"></div>
+  </div>
+
+  <div class="legend">
+    <span><b>Neural Band (emulated)</b></span>
+    <span><kbd>←</kbd><kbd>→</kbd> swipe · browse images</span>
+    <span><kbd>↑</kbd><kbd>↓</kbd> swipe · open / zoom diagram</span>
+    <span><kbd>Enter</kbd> index-pinch · select / acknowledge</span>
+    <span><kbd>Esc</kbd> middle-pinch · dismiss / back</span>
+  </div>
+  <p class="hint">Open the <a href="/" style="color:var(--hud)">operator</a> in another tab and join with this code. The doctor's text, drawings, images and directions appear here — then drive the HUD with the keys above.</p>
+
+  <script src="glasses-sim.js"></script>
+</body>
+</html>

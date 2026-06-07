@@ -1,0 +1,198 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>SaveVision — presentation</title>
+<style>
+@page{ size:297mm 210mm; margin:0; }
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:"Helvetica Neue",Arial,system-ui,sans-serif;}
+.slide{width:297mm;height:210mm;padding:24mm 26mm 26mm;background:#0a0e0c;color:#eafff5;page-break-after:always;position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:center;}
+.slide:last-child{page-break-after:auto;}
+.kick{color:#00ff95;font-weight:700;letter-spacing:2px;text-transform:uppercase;font-size:12pt;}
+h1{font-size:40pt;line-height:1.06;font-weight:850;margin:6mm 0;}
+h1 em{color:#00ff95;font-style:normal;}
+h2{font-size:33pt;font-weight:800;margin:5mm 0 8mm;}
+.lead{font-size:19pt;color:#9fb4ad;max-width:230mm;line-height:1.55;}
+ul{margin:0 0 0 7mm;font-size:19pt;line-height:1.75;}
+li{margin-bottom:6mm;}
+li b{color:#fff;}
+.quote{margin-top:8mm;font-size:15pt;color:#00e0ff;font-style:italic;border-left:3px solid #00ff95;padding-left:6mm;}
+table{width:100%;border-collapse:collapse;margin-top:5mm;font-size:15.5pt;}
+th,td{border:1px solid #2a3a32;padding:3mm 4mm;text-align:left;vertical-align:top;}
+th{background:#10211a;color:#00ff95;}
+.foot{position:absolute;bottom:10mm;left:24mm;right:24mm;display:flex;justify-content:space-between;color:#5e726a;font-size:10pt;}
+.foot b{color:#00ff95;font-weight:700;}
+.cover{background:radial-gradient(80% 120% at 75% -10%,#0e2a20,#0a0e0c 60%);}
+.steps{display:flex;gap:8mm;margin-top:6mm;}
+.step{flex:1;background:#11181f;border:1px solid #223028;border-radius:5mm;padding:7mm;}
+.step .n{width:11mm;height:11mm;border-radius:50%;background:#00ff95;color:#03110b;font-weight:800;font-size:16pt;display:flex;align-items:center;justify-content:center;margin-bottom:4mm;}
+.step h3{font-size:18pt;margin-bottom:3mm;} .step p{font-size:14.5pt;color:#9fb4ad;line-height:1.5;}
+.tag{position:absolute;top:18mm;right:24mm;font-size:10pt;color:#ffb020;border:1px solid #5a4410;background:#241c08;padding:2mm 4mm;border-radius:20mm;font-weight:700;}
+</style></head><body>
+
+<section class="slide cover">
+  <div class="kick">Remote first-aid guidance · smart glasses</div>
+  <h1>SaveVision —<br><em>a doctor's eyes, on your side</em></h1>
+  <p class="lead">A doctor's eyes and judgment, beside the casualty in the first minutes that decide survival.</p>
+  <div class="quote">Presentation for medics</div>
+  <div class="foot"><span>SaveVision</span><span>01</span></div>
+</section>
+
+<section class="slide">
+  <div class="kick">The problem</div>
+  <h2>The scarce resource isn't hands — it's judgment</h2>
+  <ul>
+    <li>In trauma, <b>most preventable deaths happen in the first minutes</b> — massive bleeding, blocked airway.</li>
+    <li>Trained medics are <b>scarce</b>; evacuation is <b>delayed</b>.</li>
+    <li>Often only an <b>untrained bystander</b> is there, not knowing what to do — and time is lost.</li>
+  </ul>
+  <div class="quote">Trained judgment can travel "over a wire" even when a medic can't arrive in time.</div>
+  <div class="foot"><span>SaveVision</span><span>02</span></div>
+</section>
+
+<section class="slide">
+  <div class="kick">The solution</div>
+  <h2>You see what the casualty sees</h2>
+  <ul>
+    <li>A bystander in smart glasses streams their first-person view (<b>POV</b>) to a remote doctor.</li>
+    <li>You guide them — <b>by voice, drawings, photos and a map</b> on the display — until help arrives.</li>
+    <li>Data is <b>one-way</b>: the doctor decides, the bystander acts.</li>
+  </ul>
+  <div class="foot"><span>SaveVision</span><span>03</span></div>
+</section>
+
+<section class="slide">
+  <div class="kick">How it works</div>
+  <h2>Call → You see → You guide</h2>
+  <div class="steps">
+    <div class="step"><div class="n">1</div><h3>Call</h3><p>From the phone or the glasses, the bystander reaches the operations centre. The glasses POV links automatically.</p></div>
+    <div class="step"><div class="n">2</div><h3>You see</h3><p>A licensed doctor watches the live POV, sees the location on a map and the ambulance ETA.</p></div>
+    <div class="step"><div class="n">3</div><h3>You guide</h3><p>Instructions, drawings on the wound, reference photos, a map — and you <b>approve</b> AI proposals before they're sent.</p></div>
+  </div>
+  <div class="foot"><span>SaveVision</span><span>04</span></div>
+</section>
+
+<section class="slide">
+  <div class="kick">Doctor's interface</div>
+  <h2>What you see as the operator</h2>
+  <ul>
+    <li><b>Live POV</b> of the casualty + a drawing tool over the image.</li>
+    <li><b>Mini-map</b> with the casualty's location and the <b>ambulance ETA</b>.</li>
+    <li><b>Call queue</b> by severity: critical / urgent / stable.</li>
+    <li><b>Task assignment</b> — to people on scene and to operators.</li>
+  </ul>
+  <div class="foot"><span>SaveVision</span><span>05</span></div>
+</section>
+
+<section class="slide">
+  <div class="kick">Capabilities</div>
+  <h2>What you send to the display</h2>
+  <ul>
+    <li><b>Instruction text</b> — a banner on the display.</li>
+    <li><b>Freehand drawing</b> — mark <b>exactly where</b> to apply a tourniquet or pressure.</li>
+    <li><b>Reference photo / diagram</b> — tourniquet, CPR, recovery position.</li>
+    <li><b>Map / direction</b> — a real map, collection point, route.</li>
+  </ul>
+  <div class="foot"><span>SaveVision</span><span>06</span></div>
+</section>
+
+<section class="slide">
+  <div class="kick">Clinical structure</div>
+  <h2>MARCH — guided care</h2>
+  <table>
+    <tr><th>Step</th><th>What you guide</th><th>Bystander action</th></tr>
+    <tr><td><b>M</b> — massive haemorrhage</td><td>tourniquet "high &amp; tight", wound packing, direct pressure, note time</td><td>applies / packs / presses</td></tr>
+    <tr><td><b>A</b> — airway</td><td>positioning, recovery position</td><td>repositions the casualty</td></tr>
+    <tr><td><b>R</b> — respiration</td><td>observation, positioning</td><td>reports what they see</td></tr>
+    <tr><td><b>C</b> — circulation</td><td>signs of shock, keep flat</td><td>monitors</td></tr>
+    <tr><td><b>H</b> — hypothermia</td><td>cover, keep warm</td><td>covers the casualty</td></tr>
+  </table>
+  <div class="foot"><span>SaveVision</span><span>07</span></div>
+</section>
+
+<section class="slide">
+  <div class="kick">Safety &amp; control</div>
+  <h2>A human makes every decision</h2>
+  <ul>
+    <li><b>One-way:</b> nothing auto-sends — <b>you approve every step</b>.</li>
+    <li><b>AI only proposes</b> (wound-image analysis) — the decision is always the doctor's.</li>
+    <li><b>End-to-end encrypted (E2E)</b> over Matrix, <b>self-hosted</b> — no third-party cloud.</li>
+    <li>A <b>medical-only channel</b> — no militarily useful information.</li>
+  </ul>
+  <div class="foot"><span>SaveVision</span><span>08</span></div>
+</section>
+
+<section class="slide">
+  <span class="tag">IMPORTANT</span>
+  <div class="kick">Limits</div>
+  <h2>What it is <em style="color:#ff6b6b;font-style:normal">not</em></h2>
+  <ul>
+    <li><b>Not a replacement</b> for emergency medical care and evacuation — it's <b>decision-support</b> that buys minutes.</li>
+    <li>Only <b>non-invasive</b> actions a layperson can perform under guidance.</li>
+    <li><b>Scene safety first:</b> the system tells the bystander to withdraw if it's unsafe.</li>
+    <li>Outcome <b>not guaranteed</b>, even with flawless guidance.</li>
+  </ul>
+  <div class="foot"><span>SaveVision</span><span>09</span></div>
+</section>
+
+<section class="slide">
+  <div class="kick">Legal / IHL</div>
+  <h2>Protection of the wounded</h2>
+  <ul>
+    <li>The wounded and those who help them are <b>protected under International Humanitarian Law</b>.</li>
+    <li>The discipline of the medical channel preserves the bystander's <b>civilian status</b>.</li>
+    <li>Informed consent, scope of practice, the <b>"do no harm"</b> principle.</li>
+  </ul>
+  <div class="foot"><span>SaveVision</span><span>10</span></div>
+</section>
+
+<section class="slide">
+  <div class="kick">Use cases</div>
+  <h2>Scenarios</h2>
+  <ul>
+    <li><b>Massive limb haemorrhage</b> — guided tourniquet.</li>
+    <li><b>Unconscious casualty</b> — breathing check, recovery position.</li>
+    <li><b>Burns, fractures, shock, childbirth, mass casualties</b> — triage by a single bystander.</li>
+    <li>Beyond medicine: <b>evacuation, search &amp; rescue, technical guidance</b>.</li>
+  </ul>
+  <div class="foot"><span>SaveVision</span><span>11</span></div>
+</section>
+
+<section class="slide">
+  <div class="kick">Your role</div>
+  <h2>We ask for your clinical review</h2>
+  <ul>
+    <li>Is the bystander's MARCH action set <b>correct and safe</b>?</li>
+    <li>Are the <b>quick prompts</b> right (tourniquet, direct pressure, recovery position)?</li>
+    <li>What must <b>never</b> be guided to an untrained person over this channel?</li>
+    <li>Requirements for <b>vetting and supervising</b> remote operators.</li>
+  </ul>
+  <div class="foot"><span>SaveVision</span><span>12</span></div>
+</section>
+
+<section class="slide">
+  <div class="kick">The system in use — real footage</div>
+  <h2>What the doctor and the bystander see</h2>
+  <div style="display:flex;gap:12mm;align-items:flex-start;margin-top:4mm">
+    <figure style="flex:1.5;margin:0">
+      <img src="mockups/operator-real.png" style="width:100%;border-radius:6px;border:1px solid #2a3a32">
+      <figcaption style="font-family:'Helvetica Neue',Arial;font-size:11.5pt;color:#9fb4ad;margin-top:3mm">Doctor's screen: live first-person view with annotation, mini-map, ambulance ETA, and guidance controls.</figcaption>
+    </figure>
+    <figure style="flex:1;margin:0">
+      <img src="mockups/glasses-real.png" style="width:100%;border-radius:6px;border:1px solid #2a3a32">
+      <figcaption style="font-family:'Helvetica Neue',Arial;font-size:11.5pt;color:#9fb4ad;margin-top:3mm">Glasses display: instruction banner, the doctor's drawing on the wound, direction to the collection point.</figcaption>
+    </figure>
+  </div>
+  <div class="foot"><span>SaveVision</span><span>·</span></div>
+</section>
+
+<section class="slide cover">
+  <div class="kick">Join us</div>
+  <h1><em>A doctor's eyes</em>, on your side.</h1>
+  <ul style="margin-top:4mm">
+    <li>Try the demo, read the concept document.</li>
+    <li>Become a <b>clinical advisor</b> or a pilot partner.</li>
+    <li>Contact: <b>hello@savevision</b> · documentation repository.</li>
+  </ul>
+  <div class="quote">Medical guidance is the first feature. The platform extends to evacuation, search &amp; rescue, and technical guidance.</div>
+  <div class="foot"><span>SaveVision</span><span>13</span></div>
+</section>
+
+</body></html>

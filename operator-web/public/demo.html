@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SaveVision — single-page demo (no connection needed)</title>
+<style>
+  :root{--bg:#0d1117;--panel:#161b22;--border:#2a323d;--fg:#e6edf3;--dim:#8b949e;--accent:#00c98d;--accfg:#03110b;--danger:#ff6b6b;--hud:#00ff95;--draw:#00e0ff;}
+  *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;}
+  body{background:var(--bg);color:var(--fg);min-height:100vh;}
+  .top{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid var(--border);}
+  .brand{font-weight:700;font-size:18px;} .brand span{color:var(--accent);}
+  .tag{font-size:12px;color:var(--dim);}
+  .wrap{display:grid;grid-template-columns:1fr 600px;gap:16px;padding:16px;align-items:start;}
+  @media(max-width:1100px){.wrap{grid-template-columns:1fr;}}
+
+  /* operator side */
+  .op{display:flex;flex-direction:column;gap:12px;}
+  .stage{position:relative;background:#000;border:1px solid var(--border);border-radius:12px;overflow:hidden;aspect-ratio:16/10;}
+  .stage video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+  .stage canvas{position:absolute;inset:0;width:100%;height:100%;cursor:crosshair;touch-action:none;}
+  .tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .tools .lab{font-size:12px;color:var(--dim);}
+  .dot{width:22px;height:22px;border-radius:50%;border:2px solid transparent;cursor:pointer;}
+  .dot.on{border-color:#fff;}
+  .controls{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:12px;}
+  .card label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;}
+  textarea,input[type=text],input[type=file]{width:100%;background:var(--bg);color:var(--fg);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:13px;}
+  button{background:var(--accent);color:var(--accfg);border:none;border-radius:8px;padding:8px 12px;font-weight:600;font-size:13px;cursor:pointer;}
+  button.ghost{background:transparent;color:var(--fg);border:1px solid var(--border);}
+  .full{width:100%;margin-top:8px;}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+  .chip{background:transparent;border:1px solid var(--border);color:var(--fg);border-radius:8px;padding:5px 9px;font-size:12px;}
+  .chip.dng{border-color:var(--danger);color:var(--danger);}
+  .gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px;}
+  .gallery img{aspect-ratio:4/3;object-fit:cover;}
+  .gallery img{width:100%;border:1px solid var(--border);border-radius:6px;cursor:pointer;background:#06120d;}
+  .gallery img:hover{border-color:var(--accent);}
+  .glabel{font-size:11px;color:var(--dim);margin-top:8px;}
+  .compass4{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0;}
+  .dir{background:transparent;border:1px solid var(--border);color:var(--fg);border-radius:8px;padding:6px;font-size:12px;cursor:pointer;} .dir.on{border-color:var(--accent);color:var(--accent);}
+
+  /* glasses HUD */
+  .hudwrap{display:flex;flex-direction:column;gap:8px;align-items:center;}
+  .glasses{position:relative;width:600px;max-width:96vw;aspect-ratio:1;background:#0b0f0d;border-radius:12px;overflow:hidden;outline:1px solid #ffffff1a;}
+  .glasses video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+  .glasses canvas{position:absolute;inset:0;width:100%;height:100%;}
+  .banner{position:absolute;top:0;left:0;right:0;padding:14px 18px;background:linear-gradient(#000d,#0000);color:var(--hud);font-size:22px;font-weight:800;text-shadow:0 1px 4px #000;transition:opacity .2s;}
+  .banner.danger{color:#ff6b6b;} .banner:empty{opacity:0;}
+  .imgcard{position:absolute;right:12px;bottom:12px;width:200px;border:2px solid var(--hud);border-radius:8px;overflow:hidden;background:#000;display:none;}
+  .imgcard img{display:block;width:100%;} .imgcard .cap{font-size:11px;padding:3px 6px;color:var(--hud);background:#000a;display:flex;justify-content:space-between;}
+  .compass{position:absolute;left:12px;bottom:14px;width:92px;height:92px;display:none;align-items:center;justify-content:center;}
+  .compass .ring{position:absolute;inset:0;border:2px solid #ffffff44;border-radius:50%;}
+  .compass .arrow{font-size:44px;color:var(--hud);transition:transform .2s;}
+  .compass .lbl{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:11px;color:var(--hud);}
+  .gesture{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);background:#000b;border:1px solid var(--hud);color:var(--hud);padding:5px 12px;border-radius:999px;font-size:13px;opacity:0;transition:opacity .12s;}
+  .gesture.show{opacity:1;}
+  .ack{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:40px;font-weight:800;color:var(--hud);opacity:0;}
+  .ack.show{animation:pop .9s ease;}
+  @keyframes pop{0%{opacity:0;transform:scale(.6)}25%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.1)}}
+  .legend{font-size:12px;color:var(--dim);text-align:center;}
+  kbd{background:#1c2430;border:1px solid #34404d;border-radius:5px;padding:1px 6px;font-family:ui-monospace,monospace;color:var(--fg);}
+</style>
+</head>
+<body>
+  <div class="top">
+    <div class="brand">SaveVision <span>· single-page demo</span></div>
+    <div class="tag">No connection needed — operator (left) drives the glasses HUD (right) in real time.</div>
+  </div>
+
+  <div class="wrap">
+    <!-- OPERATOR -->
+    <div class="op">
+      <div class="stage">
+        <video id="opVid" autoplay playsinline muted></video>
+        <canvas id="draw"></canvas>
+      </div>
+      <div class="tools">
+        <span class="lab">Draw:</span>
+        <span class="dot on" data-c="#00e0ff" style="background:#00e0ff"></span>
+        <span class="dot" data-c="#ff4d4d" style="background:#ff4d4d"></span>
+        <span class="dot" data-c="#ffd400" style="background:#ffd400"></span>
+        <span class="dot" data-c="#00ff95" style="background:#00ff95"></span>
+        <button class="ghost" id="clearBtn">Clear</button>
+        <button id="sendDraw">Send drawing →</button>
+        <button class="ghost" id="camBtn">Enable camera</button>
+      </div>
+      <div class="controls">
+        <div class="card">
+          <label>Instruction text</label>
+          <textarea id="txt" rows="2" placeholder="e.g. Apply tourniquet high & tight"></textarea>
+          <button class="full" id="sendTxt">Send to display</button>
+          <div class="chips">
+            <button class="chip dng" data-msg="STOP — scene unsafe, take cover">STOP</button>
+            <button class="chip" data-msg="Apply firm direct pressure now">Direct pressure</button>
+            <button class="chip" data-msg="Apply tourniquet high and tight">Tourniquet</button>
+          </div>
+        </div>
+        <div class="card">
+          <label>Example image</label>
+          <input type="file" id="img" accept="image/*" />
+          <button class="full" id="sendImg">Send image →</button>
+          <div class="glabel">or send a reference photo (real, from Wikimedia Commons):</div>
+          <div class="gallery" id="gallery">
+            <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Tourniquet_CAT_training.jpg" data-l="Tourniquet (CAT)" title="Tourniquet">
+            <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Herz-Lungen-Wiederbelebung-Training_an_einer_Laerdal-Rescue-Anne.jpg" data-l="CPR (manikin)" title="CPR on manikin">
+            <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Recovery_position.jpg" data-l="Recovery position" title="Recovery position">
+          </div>
+          <label style="margin-top:10px">Map / direction</label>
+          <input type="text" id="mapLabel" placeholder="Casualty collection point" />
+          <div class="compass4">
+            <button class="dir on" data-b="0">↑ Ahead</button><button class="dir" data-b="90">→ Right</button>
+            <button class="dir" data-b="180">↓ Behind</button><button class="dir" data-b="270">← Left</button>
+          </div>
+          <button class="full" id="sendMap">Send map →</button>
+          <div class="glabel" style="margin-top:12px">AI guidance — propose &amp; approve</div>
+          <button class="full" id="aiGen">🧠 Generate guidance</button>
+          <div id="aiProp" style="display:none;margin-top:8px;border:1px solid var(--accent);border-radius:8px;padding:8px">
+            <div style="font-size:11px;color:var(--accent);margin-bottom:6px">Proposed — review before sending:</div>
+            <img id="aiImg" style="width:100%;border-radius:6px;background:#06120d" />
+            <div style="display:flex;gap:6px;margin-top:8px"><button class="full" id="aiOk">✓ Approve &amp; send</button><button class="full" id="aiNo" style="background:transparent;color:var(--fg);border:1px solid var(--border)">✕ Discard</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GLASSES HUD -->
+    <div class="hudwrap">
+      <div class="glasses" id="glasses" tabindex="0">
+        <video id="hudVid" autoplay playsinline muted></video>
+        <canvas id="overlay"></canvas>
+        <div class="banner" id="banner"></div>
+        <div class="imgcard" id="imgcard"><img id="imgcardImg"/><div class="cap"><span id="imgcardCap"></span><span id="imgcardCount"></span></div></div>
+        <div class="compass" id="compass"><div class="ring"></div><div class="arrow" id="arrow">↑</div><div class="lbl" id="lbl"></div></div>
+        <div class="ack" id="ackEl">✓ Got it</div>
+        <div class="gesture" id="gesture"></div>
+      </div>
+      <div class="legend">Neural Band (click the HUD first): <kbd>←</kbd><kbd>→</kbd> browse images · <kbd>↑</kbd><kbd>↓</kbd> zoom · <kbd>Enter</kbd> acknowledge · <kbd>Esc</kbd> dismiss</div>
+    </div>
+  </div>
+
+<script>
+const $=id=>document.getElementById(id);
+const draw=$("draw"), dctx=draw.getContext("2d");
+const overlay=$("overlay"), octx=overlay.getContext("2d");
+let penColor="#00e0ff", strokes=[], drawing=false, bearing=0;
+const images=[]; let imgIndex=-1, fullzoom=1, bannerTimer=null;
+
+function fit(c){c.width=c.clientWidth;c.height=c.clientHeight;}
+function fitAll(){fit(draw);fit(overlay);repaintOp();}
+window.addEventListener("resize",fitAll);
+
+/* camera (optional, one stream shown in both panels) */
+$("camBtn").addEventListener("click",async()=>{
+  try{
+    const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"},audio:false});
+    $("opVid").srcObject=s; $("hudVid").srcObject=s;
+    $("camBtn").textContent="Camera on"; $("camBtn").disabled=true;
+  }catch(e){ alert("Camera blocked — the demo still works without it. ("+e.message+")"); }
+});
+
+/* operator drawing */
+function pos(e){const r=draw.getBoundingClientRect();return{x:(e.clientX-r.left)/r.width,y:(e.clientY-r.top)/r.height};}
+function repaintOp(){dctx.clearRect(0,0,draw.width,draw.height);for(const s of strokes){dctx.strokeStyle=s.color;dctx.lineWidth=4;dctx.lineCap="round";dctx.lineJoin="round";dctx.beginPath();s.points.forEach((p,i)=>{const x=p.x*draw.width,y=p.y*draw.height;i?dctx.lineTo(x,y):dctx.moveTo(x,y);});dctx.stroke();}}
+draw.addEventListener("pointerdown",e=>{drawing=true;strokes.push({color:penColor,points:[pos(e)]});repaintOp();});
+draw.addEventListener("pointermove",e=>{if(!drawing)return;strokes[strokes.length-1].points.push(pos(e));repaintOp();});
+window.addEventListener("pointerup",()=>drawing=false);
+document.querySelectorAll(".dot").forEach(d=>d.addEventListener("click",()=>{document.querySelectorAll(".dot").forEach(x=>x.classList.remove("on"));d.classList.add("on");penColor=d.dataset.c;}));
+$("clearBtn").addEventListener("click",()=>{strokes=[];repaintOp();renderStrokes([]);});
+$("sendDraw").addEventListener("click",()=>renderStrokes(strokes));
+
+/* operator → HUD senders (in-memory) */
+$("sendTxt").addEventListener("click",()=>showBanner($("txt").value.trim()));
+document.querySelectorAll(".chip").forEach(c=>c.addEventListener("click",()=>showBanner(c.dataset.msg)));
+$("sendImg").addEventListener("click",()=>{const f=$("img").files[0];if(!f)return;const im=new Image();im.onload=()=>{const mx=640,sc=Math.min(1,mx/Math.max(im.width,im.height));const c=document.createElement("canvas");c.width=im.width*sc;c.height=im.height*sc;c.getContext("2d").drawImage(im,0,0,c.width,c.height);addImage(c.toDataURL("image/jpeg",.7),f.name);};im.src=URL.createObjectURL(f);});
+document.querySelectorAll("#gallery img").forEach(g=>g.addEventListener("click",()=>addImage(g.src,g.dataset.l)));
+// AI guidance: propose (stand-in, no cost) → operator approves → shows on HUD. Real system: Claude vision on a frame.
+$("aiGen").addEventListener("click",()=>{ $("aiImg").src="diagrams/wound-packing.svg"; $("aiProp").style.display="block"; });
+$("aiOk").addEventListener("click",()=>{ addImage($("aiImg").src,"AI guidance (approved)"); $("aiProp").style.display="none"; });
+$("aiNo").addEventListener("click",()=>{ $("aiProp").style.display="none"; });
+document.querySelectorAll(".dir").forEach(d=>d.addEventListener("click",()=>{document.querySelectorAll(".dir").forEach(x=>x.classList.remove("on"));d.classList.add("on");bearing=+d.dataset.b;}));
+$("sendMap").addEventListener("click",()=>showMap(bearing,$("mapLabel").value.trim()||"Go"));
+
+/* HUD renderers */
+function showBanner(t){if(!t)return;const el=$("banner");el.textContent=t;el.classList.toggle("danger",/stop|unsafe/i.test(t));clearTimeout(bannerTimer);if(!/stop|unsafe/i.test(t))bannerTimer=setTimeout(()=>el.textContent="",12000);}
+function renderStrokes(ss){octx.clearRect(0,0,overlay.width,overlay.height);for(const s of ss){octx.strokeStyle=s.color||"#00ff95";octx.lineWidth=5;octx.lineCap="round";octx.lineJoin="round";octx.beginPath();s.points.forEach((p,i)=>{const x=p.x*overlay.width,y=p.y*overlay.height;i?octx.lineTo(x,y):octx.moveTo(x,y);});octx.stroke();}}
+function addImage(url,cap){images.push({url,cap});imgIndex=images.length-1;renderImg();}
+function renderImg(){const it=images[imgIndex];if(!it)return;$("imgcardImg").src=it.url;$("imgcardCap").textContent=it.cap||"reference";$("imgcardCount").textContent=images.length>1?`${imgIndex+1}/${images.length}`:"";$("imgcard").style.display="block";}
+function showMap(b,l){$("compass").style.display="flex";$("arrow").style.transform=`rotate(${b}deg)`;$("lbl").textContent=l;}
+
+/* Neural Band (keyboard) on the HUD */
+const GLAB={up:"↑ swipe up",down:"↓ swipe down",left:"← swipe left",right:"→ swipe right",enter:"index-pinch",cancel:"middle-pinch"};
+function flash(a){const g=$("gesture");g.textContent=GLAB[a]||a;g.classList.add("show");clearTimeout(flash._t);flash._t=setTimeout(()=>g.classList.remove("show"),900);}
+function act(a){flash(a);const fs=images.length;
+  if(a==="enter"){const b=$("banner");if(b.textContent){$("ackEl").classList.remove("show");void $("ackEl").offsetWidth;$("ackEl").classList.add("show");b.textContent="";}return;}
+  if(a==="cancel"){$("imgcard").style.display="none";renderStrokes([]);$("banner").textContent="";return;}
+  if(a==="left"&&fs){imgIndex=(imgIndex-1+fs)%fs;renderImg();return;}
+  if(a==="right"&&fs){imgIndex=(imgIndex+1)%fs;renderImg();return;}
+  if((a==="up"||a==="down")&&fs){fullzoom=a==="up"?Math.min(2.2,fullzoom+0.2):Math.max(1,fullzoom-0.2);$("imgcardImg").style.transform=`scale(${fullzoom})`;return;}
+}
+const KEY={ArrowUp:"up",ArrowDown:"down",ArrowLeft:"left",ArrowRight:"right",Enter:"enter"," ":"enter",Escape:"cancel",Backspace:"cancel"};
+window.addEventListener("keydown",e=>{const a=KEY[e.key];if(!a)return;e.preventDefault();act(a);});
+
+fitAll();
+</script>
+</body>
+</html>

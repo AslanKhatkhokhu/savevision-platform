@@ -1,0 +1,90 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Operator view (realistic)</title>
+<style>
+  :root{--bg:#0d1117;--panel:#161b22;--border:#2a323d;--fg:#e6edf3;--dim:#8b949e;--accent:#00c98d;--accfg:#03110b;--danger:#ff6b6b;--hud:#00e0ff;}
+  *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;}
+  html,body{width:1280px;height:800px;background:var(--bg);color:var(--fg);overflow:hidden;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid var(--border);}
+  .brand{font-weight:700;font-size:18px;} .brand span{color:var(--accent);font-weight:500;}
+  .status{font-size:13px;padding:4px 12px;border-radius:999px;background:var(--accent);color:var(--accfg);font-weight:600;}
+  .layout{display:grid;grid-template-columns:1fr 360px;height:752px;}
+  .stage{position:relative;background:#000;overflow:hidden;}
+  .pov{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 40%;}
+  .ann{position:absolute;inset:0;}
+  .rec{position:absolute;top:12px;left:14px;color:#ff7a7a;font-size:13px;font-weight:700;text-shadow:0 1px 3px #000;}
+  .rec b{color:#fff;}
+  .povtag{position:absolute;bottom:12px;left:14px;background:#000a;border:1px solid var(--hud);color:var(--hud);font-size:12px;padding:3px 9px;border-radius:999px;}
+  .minimap{position:absolute;left:14px;top:44px;width:172px;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:#070b0fdd;}
+  .minimap .mh{font-size:10px;color:var(--dim);padding:4px 8px;border-bottom:1px solid var(--border);}
+  .minimap .mh b{color:var(--hud);}
+  .tools{position:absolute;bottom:0;left:0;right:0;display:flex;align-items:center;gap:8px;padding:10px 12px;background:linear-gradient(#0000,#000a 40%);}
+  .tools .lab{font-size:12px;color:#cfe;}
+  .dot{width:20px;height:20px;border-radius:50%;border:2px solid transparent;} .dot.on{border-color:#fff;}
+  .btn{background:var(--accent);color:var(--accfg);border:none;border-radius:8px;padding:8px 12px;font-weight:600;font-size:13px;}
+  .ghost{background:#0008;color:#fff;border:1px solid #fff5;border-radius:8px;padding:7px 11px;font-size:12px;}
+  .right{margin-left:auto;}
+  .panel{border-left:1px solid var(--border);padding:14px;display:flex;flex-direction:column;gap:11px;overflow:hidden;background:var(--bg);}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:12px;}
+  .card label{display:block;font-size:13px;font-weight:600;margin-bottom:5px;} .hint{font-size:11px;color:var(--dim);}
+  .mxok{font-size:12px;color:var(--accent);} .input{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 11px;font-size:13px;}
+  .full{width:100%;margin-top:8px;} .quick{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+  .chip{border:1px solid var(--border);color:var(--fg);border-radius:8px;padding:5px 9px;font-size:12px;} .chip.dng{border-color:var(--danger);color:var(--danger);}
+  .gal{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px;} .gal img{width:100%;aspect-ratio:4/3;object-fit:cover;border:1px solid var(--border);border-radius:6px;}
+  .log{list-style:none;font-size:12px;color:var(--dim);display:flex;flex-direction:column;gap:3px;} .log .sent{color:var(--accent);} .log li{padding:2px 0;border-bottom:1px solid var(--border);}
+</style></head><body>
+  <div class="topbar">
+    <div class="brand">SaveVision <span>· Operator · Doctor</span></div>
+    <div class="status">● Live · room SAFE7K · @operator</div>
+  </div>
+  <div class="layout">
+    <div class="stage">
+      <img class="pov" src="assets/herz-lungen-wieder.jpg" alt="POV">
+      <svg class="ann" viewBox="0 0 100 100" preserveAspectRatio="none">
+        <ellipse cx="49" cy="55" rx="9" ry="11" fill="none" stroke="#00e0ff" stroke-width="0.9"/>
+        <path d="M26 30 Q40 42 45 50" fill="none" stroke="#00e0ff" stroke-width="0.9" stroke-linecap="round"/>
+        <path d="M45 50 l-4.5 -1 m4.5 1 l-1 -4.6" fill="none" stroke="#00e0ff" stroke-width="0.9" stroke-linecap="round"/>
+      </svg>
+      <div class="rec">● <b>REC</b> · wearer POV</div>
+      <div class="minimap">
+        <div class="mh">Location · #C-7 · <b>Sector B-4, Kyiv</b></div>
+        <svg viewBox="0 0 172 96" width="172" height="96"><rect width="172" height="96" fill="#070b0f"/>
+          <g stroke="#1a2430"><line x1="57" y1="0" x2="57" y2="96"/><line x1="114" y1="0" x2="114" y2="96"/><line x1="0" y1="48" x2="172" y2="48"/></g>
+          <g transform="translate(40,66)"><rect x="-8" y="-8" width="16" height="16" rx="3" fill="#0e2a3a" stroke="#00e0ff"/><text x="0" y="4" fill="#00e0ff" font-size="9" font-weight="700" text-anchor="middle">H</text></g>
+          <g transform="translate(112,40)"><circle r="7" fill="#ff4d4d"/><circle r="12" fill="none" stroke="#ff4d4d" stroke-opacity=".4" stroke-width="2"/><text x="0" y="-13" fill="#ff8a8a" font-size="9" text-anchor="middle">C-7</text></g>
+          <g transform="translate(86,78)"><path d="M0 -7 L6 5 L-6 5 Z" fill="#00e0ff"/></g>
+        </svg>
+      </div>
+      <div class="povtag">👓 Glasses POV · live · 1 fps</div>
+      <div class="tools">
+        <span class="lab">Draw</span>
+        <span class="dot on" style="background:#00e0ff"></span><span class="dot" style="background:#ff4d4d"></span><span class="dot" style="background:#ffd400"></span>
+        <button class="ghost">❄ Freeze</button><button class="ghost">Clear</button>
+        <button class="btn right">Send drawing →</button>
+      </div>
+    </div>
+    <aside class="panel">
+      <div class="card"><label>Matrix — live transport</label><div class="mxok">✓ @operator:matrix.example.org · room ready</div></div>
+      <div class="card">
+        <label>Instruction text</label>
+        <div class="input">Compress centre of chest — 100–120/min</div>
+        <button class="btn full">Send to display</button>
+        <div class="quick"><span class="chip dng">STOP / unsafe</span><span class="chip">Direct pressure</span><span class="chip">Tourniquet</span></div>
+      </div>
+      <div class="card">
+        <label>Reference photo</label>
+        <div class="gal">
+          <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Tourniquet_CAT_training.jpg">
+          <img src="assets/herz-lungen-wieder.jpg">
+          <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Recovery_position.jpg">
+        </div>
+      </div>
+      <div class="card">
+        <label>AI guidance — propose &amp; approve</label>
+        <div class="hint">Server proposes; you approve before it reaches the wearer.</div>
+        <button class="btn full">🧠 Generate guidance</button>
+      </div>
+      <div class="card"><label>Session log</label>
+        <ul class="log"><li class="sent">→ drawing (1 stroke)</li><li class="sent">→ text: Compress centre of chest</li><li>Matrix connected — posts to room</li><li>Joined room SAFE7K</li></ul>
+      </div>
+    </aside>
+  </div>
+</body></html>

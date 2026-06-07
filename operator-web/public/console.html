@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SaveVision — Operations Console (synchronised)</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  :root{--bg:#0d1117;--panel:#161b22;--panel2:#1b2230;--border:#2a323d;--fg:#e6edf3;--dim:#8b949e;--accent:#00c98d;--accfg:#03110b;--op:#00e0ff;--crit:#ff4d4d;--urg:#ffb020;--ok:#3fb950;}
+  *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;}
+  html,body{height:100%;background:var(--bg);color:var(--fg);overflow:hidden;}
+  .top{display:flex;align-items:center;justify-content:space-between;padding:10px 18px;border-bottom:1px solid var(--border);height:52px;}
+  .brand{font-weight:700;font-size:17px;} .brand span{color:var(--accent);}
+  .chips{display:flex;gap:14px;font-size:12px;color:var(--dim);align-items:center;}
+  .chips b{color:var(--fg);} .pill{padding:3px 10px;border-radius:999px;border:1px solid var(--border);}
+  .pill.live{color:var(--crit);border-color:var(--crit);} .pill.wait{color:var(--urg);border-color:var(--urg);}
+  .grid{display:grid;grid-template-columns:320px 1fr 330px;height:calc(100% - 52px);}
+  .col{padding:12px;overflow:auto;display:flex;flex-direction:column;gap:10px;}
+  .col.mid{padding:0;border-left:1px solid var(--border);border-right:1px solid var(--border);position:relative;}
+  #map{position:absolute;inset:0;} .leaflet-container{background:#0a0e13;}
+  .leaflet-tile{filter:brightness(.7) contrast(1.05) hue-rotate(170deg) invert(.92) saturate(.6);}
+  h2{font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--dim);}
+  button{background:var(--panel);color:var(--fg);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:12px;font-weight:600;cursor:pointer;}
+  button.accent{background:var(--accent);color:var(--accfg);border-color:var(--accent);width:100%;}
+
+  .call{background:var(--panel);border:1px solid var(--border);border-left:4px solid var(--border);border-radius:10px;padding:9px 11px;cursor:pointer;}
+  .call:hover{border-color:var(--op);} .call.sel{outline:2px solid var(--op);}
+  .call.crit{border-left-color:var(--crit);} .call.urg{border-left-color:var(--urg);} .call.ok{border-left-color:var(--ok);}
+  .call .r1{display:flex;justify-content:space-between;align-items:center;}
+  .call .id{font-family:ui-monospace,monospace;font-weight:700;font-size:12px;}
+  .sev{font-size:9px;font-weight:700;padding:2px 6px;border-radius:999px;}
+  .sev.crit{background:#3a1414;color:var(--crit);} .sev.urg{background:#3a2c10;color:var(--urg);} .sev.ok{background:#143019;color:var(--ok);}
+  .call .who{font-size:13.5px;font-weight:600;margin:4px 0 2px;}
+  .call .meta{font-size:11px;color:var(--dim);display:flex;justify-content:space-between;}
+  .call .op{color:var(--op);} .call .eta{font-family:ui-monospace,monospace;color:var(--urg);}
+  .ring{font-size:9px;font-weight:700;padding:2px 7px;border-radius:999px;background:#3a1414;color:var(--crit);}
+  .call.incoming{border-left-color:var(--crit);animation:cpulse 1.4s infinite}
+  @keyframes cpulse{0%,100%{box-shadow:0 0 0 0 #ff4d4d00}50%{box-shadow:0 0 0 3px #ff4d4d44}}
+  .ans{width:100%;margin-top:8px;background:var(--accent);color:var(--accfg);border-color:var(--accent);}
+  .call.active{outline:2px solid var(--accent);box-shadow:0 0 12px #00c98d66;border-left-color:var(--accent)!important;}
+  .preset{width:46px;height:46px;object-fit:cover;border-radius:6px;border:1px solid var(--border);cursor:pointer;}
+  .preset:hover{border-color:var(--accent);}
+
+  .selbox{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:11px;}
+  .selbox .t{font-weight:700;} .selbox .s{font-size:12px;color:var(--dim);margin-top:3px;}
+  .field{font-size:11px;color:var(--dim);margin:8px 0 3px;}
+  select,input[type=text]{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--fg);border-radius:8px;padding:7px 9px;font-size:13px;}
+  .prio{display:flex;gap:5px;} .seg{flex:1;text-align:center;border:1px solid var(--border);border-radius:7px;padding:6px;font-size:11px;cursor:pointer;} .seg.on{border-color:var(--accent);color:var(--accent);}
+  .task{background:var(--panel);border:1px solid var(--border);border-radius:9px;padding:8px 10px;}
+  .task .t1{display:flex;justify-content:space-between;font-size:12.5px;gap:6px;}
+  .task .as{font-size:11px;color:var(--dim);margin-top:3px;} .task .as .op{color:var(--op);} .task .as .pl{color:#d2a8ff;}
+  .st{font-size:9px;font-weight:700;padding:2px 6px;border-radius:999px;white-space:nowrap;}
+  .st.todo{background:#2a2410;color:var(--urg);} .st.prog{background:#0e2a3a;color:var(--op);} .st.done{background:#143019;color:var(--ok);}
+  .upd{font-size:11px;color:var(--dim);}
+  button.accent{background:var(--accent);color:var(--accfg);border-color:var(--accent);width:100%;}
+  .modal{position:fixed;inset:0;background:#000b;display:none;align-items:center;justify-content:center;z-index:2000;}
+  .modal.show{display:flex;}
+  .form{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:18px;width:390px;max-width:92vw;max-height:92vh;overflow:auto;}
+  .form h3{margin-bottom:4px;} .form .fl{font-size:11px;color:var(--dim);margin:9px 0 3px;}
+  .form input,.form textarea,.form select{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--fg);border-radius:8px;padding:8px 10px;font-size:13px;}
+  .form .reqb{margin-top:5px;width:100%;background:#10202c;color:#00b3d6;border:1px solid #1d4a5a;border-radius:7px;padding:6px;font-size:11px;cursor:pointer;font-weight:600;}
+  .form .sevseg{display:flex;gap:5px;} .form .sevseg .s{flex:1;text-align:center;border:1px solid var(--border);border-radius:7px;padding:7px;font-size:12px;cursor:pointer;}
+  .form .sevseg .s.on{border-color:var(--accent);color:var(--accent);}
+  .form .frow{display:flex;gap:8px;margin-top:14px;} .form .frow button{flex:1;}
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="brand">SaveVision <span>· Operations Console</span></div>
+  <div class="chips">
+    <span class="pill" id="onair" style="display:none;cursor:pointer;color:var(--crit);border-color:var(--crit)">● ON AIR — open call</span>
+    <span class="pill live" id="cLive">● 0 live</span>
+    <span class="pill wait" id="cWait">● 0 waiting</span>
+    <span>Operators: <b>4</b></span>
+    <span class="upd" id="upd">● online · 0s</span>
+  </div>
+</div>
+
+<div class="grid">
+  <!-- CALLERS -->
+  <div class="col">
+    <h2>Incoming calls</h2>
+    <div style="display:flex;gap:6px"><input type="password" id="mxTok" placeholder="operator token (to answer)" style="flex:1;background:var(--bg);border:1px solid var(--border);color:var(--fg);border-radius:8px;padding:6px 8px;font-size:12px"><button id="mxGo">Link</button></div>
+    <div id="mxState" class="upd"></div>
+    <button id="joinAll" style="width:100%">📡 Watch ALL active streams</button>
+    <div id="incomingBox" style="display:flex;flex-direction:column;gap:8px"></div>
+    <div id="calls" style="display:flex;flex-direction:column;gap:8px"></div>
+    <button id="newCase" class="accent">＋ New case</button>
+    <button id="simCall" style="font-weight:500;color:var(--dim)">simulate random call</button>
+  </div>
+
+  <!-- SITUATION MAP -->
+  <div class="col mid"><div id="map"></div></div>
+
+  <!-- OPERATION HANDLING -->
+  <div class="col">
+    <h2>Operation handling</h2>
+    <div class="selbox" id="selbox"><div class="t">No call selected</div><div class="s">Click a caller to sync the map and pre-fill a task.</div></div>
+    <div>
+      <div class="field">Assign task to</div>
+      <select id="assignee"></select>
+      <div class="field">Task</div>
+      <input type="text" id="taskText" placeholder="e.g. Apply tourniquet, move to CCP" />
+      <div class="field">Priority</div>
+      <div class="prio"><span class="seg on" data-p="High">High</span><span class="seg" data-p="Med">Med</span><span class="seg" data-p="Low">Low</span></div>
+      <button class="accent" id="assignBtn" style="margin-top:8px">Assign task →</button>
+    </div>
+    <h2 style="margin-top:6px">Send image to glasses</h2>
+    <div style="display:flex;gap:6px;flex-wrap:wrap" id="imgPresets">
+      <img class="preset" src="https://commons.wikimedia.org/wiki/Special:FilePath/Tourniquet_CAT_training.jpg" data-cap="Tourniquet — high & tight">
+      <img class="preset" src="https://commons.wikimedia.org/wiki/Special:FilePath/Recovery_position.jpg" data-cap="Recovery position">
+      <img class="preset" src="https://commons.wikimedia.org/wiki/Special:FilePath/Herz-Lungen-Wiederbelebung-Training_an_einer_Laerdal-Rescue-Anne.jpg" data-cap="CPR — chest compressions">
+    </div>
+    <input type="file" id="imgFile" accept="image/*" style="font-size:11px;margin-top:6px;width:100%">
+    <div id="imgState" class="upd"></div>
+    <h2 style="margin-top:6px">Active tasks</h2>
+    <div id="tasks" style="display:flex;flex-direction:column;gap:8px"></div>
+  </div>
+</div>
+
+<div class="modal" id="modal">
+  <div class="form">
+    <h3>New case</h3>
+    <div style="font-size:11px;color:var(--dim)">Placed at the current map centre — pan the map first to position it.</div>
+    <div class="fl">Caller / name</div><input id="fName" value="anon-caller">
+    <div class="fl">Severity</div>
+    <div class="sevseg" id="fSev"><span class="s on" data-v="crit">Critical</span><span class="s" data-v="urg">Urgent</span><span class="s" data-v="ok">Stable</span></div>
+    <div class="fl">Injury / wound</div><input id="fInjury" placeholder="e.g. leg hemorrhage">
+    <div class="fl">Address — type manually, or request</div><input id="fAddr" placeholder="No address? type it, or request →">
+    <button class="reqb" id="fReq">⤴ Request address from external operator</button>
+    <div class="fl">Situation</div><textarea id="fSit" rows="2" placeholder="e.g. adult, conscious, heavy bleeding"></textarea>
+    <div class="fl">Danger / scene</div>
+    <select id="fDanger"><option>Unknown</option><option>Safe</option><option>Under fire</option><option>Hazard present</option><option>Structure unstable</option></select>
+    <div class="fl">Ambulance ETA (minutes)</div><input id="fEta" type="number" min="0" value="8">
+    <div class="frow"><button id="fCancel">Cancel</button><button id="fCreate" class="accent">Create case</button></div>
+  </div>
+</div>
+
+<div class="modal" id="callView">
+  <div style="background:#000;border:1px solid var(--border);border-radius:14px;padding:10px;width:82vw;max-width:1000px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div id="callTitle" style="font-weight:700">Incoming call</div>
+      <button id="callBack">← Back to console</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:8px"><button id="callLK" class="accent" style="flex:1">📡 Via MatrixRTC (SFU)</button><button id="callP2P" style="flex:1;display:none">🔗 Via SV1 (P2P)</button><button id="callMic" style="flex:1" disabled>🎙 Mic</button></div>
+    <div id="callStage" style="position:relative;width:100%;height:68vh;background:#000;border-radius:8px;overflow:hidden">
+      <video id="callVid" autoplay playsinline muted style="width:100%;height:100%;object-fit:contain;background:#000"></video>
+    </div>
+    <div id="callState" class="upd" style="margin-top:6px"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
+<script src="rtc-view.js"></script>
+<script src="call-matrix.js"></script>
+<script>
+const KYIV=[50.4501,30.5234];
+const SV_HS="https://matrix.example.org";
+const SV_ROOM="!your-room:matrix.example.org";  // default call room
+const map=L.map("map").setView(KYIV,13);
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"© OpenStreetMap"}).addTo(map);
+L.marker(KYIV).addTo(map).bindTooltip("CCP",{permanent:true,direction:"top"});
+const COLOR={crit:"#ff4d4d",urg:"#ffb020",ok:"#3fb950"};
+const OPERATORS=["Dr. Lena","Dr. Adan","Dr. Ivo","(unassigned)"];
+const $=id=>document.getElementById(id);
+
+let calls=[], tasks=[], selectedId=null, prio="High", nextNum=10;
+
+// ---- answer incoming calls in-place (operator) — no close, only answer/wait ----
+// Hardcoded operator token for testing (TEST account/homeserver — rotate + remove before real/public use).
+let mxToken=localStorage.getItem("sv_optoken")||"", activeCall=null;
+$("mxState").textContent="● linked as @operator (hardcoded · test)";
+$("mxGo").onclick=async()=>{ const t=$("mxTok").value.trim(); if(!t)return;
+  try{ const w=await fetch(SV_HS+"/_matrix/client/v3/account/whoami",{headers:{Authorization:"Bearer "+t}}).then(r=>r.json());
+    if(w.user_id){ mxToken=t; localStorage.setItem("sv_optoken",t); $("mxState").textContent="● linked as "+w.user_id; $("mxTok").value=""; }
+    else $("mxState").textContent="✗ invalid token"; }catch(e){ $("mxState").textContent="✗ "+e.message; } };
+let currentRoom=SV_ROOM, mxUserId="@operator:matrix.example.org", lkRoom=null, micOn=false, activeRoom=null;
+fetch(SV_HS+"/_matrix/client/v3/account/whoami",{headers:{Authorization:"Bearer "+mxToken}}).then(r=>r.json()).then(w=>{if(w.user_id)mxUserId=w.user_id;}).catch(()=>{});
+function stopActive(){ try{ (activeCall&&(activeCall.stop||activeCall.hangup)||function(){})(); }catch{} if(window.svStopAll) window.svStopAll(); activeCall=null; lkRoom=null; micOn=false; const mb=$("callMic"); if(mb){ mb.disabled=true; mb.textContent="🎙 Mic"; } }
+// Watch EVERY active stream across all detected rooms in one shared grid.
+async function joinAllStreams(){
+  if(!mxToken){ $("mxState").textContent="paste operator token + Link first"; $("mxTok").focus(); return; }
+  const rooms=[...incomingCalls.keys()]; if(currentRoom && !rooms.includes(currentRoom)) rooms.unshift(currentRoom);
+  if(!rooms.length){ $("mxState").textContent="no active calls detected yet"; return; }
+  stopActive(); $("callTitle").textContent="All active streams ("+rooms.length+")"; $("callState").textContent="joining…"; $("callView").classList.add("show");
+  for(let i=0;i<rooms.length;i++){
+    try{ await startLivePOV({hs:SV_HS, token:mxToken, userId:mxUserId, roomId:rooms[i], videoEl:$("callVid"), log:(m)=>$("callState").textContent=m, append:i>0, mic:false}); }catch(e){}
+  }
+  activeCall={stop:window.svStopAll, hangup:window.svStopAll};
+}
+const _ja=document.getElementById("joinAll"); if(_ja) _ja.onclick=joinAllStreams;
+
+// Send an image to the wearer's glasses display (backend guidance → glasses HUD renders it).
+function sendImageToGlasses(url, caption){
+  if(!selectedId){ $("imgState").textContent="select a case first"; return; }
+  $("imgState").textContent="sending…";
+  fetch("/api/cases/"+encodeURIComponent(selectedId)+"/guidance",{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({kind:"image", url, caption:caption||"reference image", actor:"operator"})})
+    .then(r=>r.json()).then(()=>{ $("imgState").textContent="✓ sent to glasses ("+selectedId+")"; })
+    .catch(e=>{ $("imgState").textContent="✗ "+e.message; });
+}
+document.querySelectorAll("#imgPresets .preset").forEach(im=>im.onclick=()=>sendImageToGlasses(im.src, im.dataset.cap));
+const _if=document.getElementById("imgFile"); if(_if) _if.onchange=()=>{ const f=_if.files&&_if.files[0]; if(!f) return; const rd=new FileReader(); rd.onload=()=>sendImageToGlasses(rd.result, f.name); rd.readAsDataURL(f); };
+async function startP2P(){ stopActive(); $("callVid").style.display=""; $("callState").textContent="answering (P2P / SV1)…";
+  try{ activeCall=await answerMatrixCall({hs:SV_HS, token:mxToken, roomId:currentRoom, videoEl:$("callVid"), log:(m)=>$("callState").textContent=m}); }
+  catch(e){ $("callState").textContent="✗ "+e.message; } }
+async function startLK(){ stopActive(); $("callState").textContent="joining MatrixRTC (SFU)…";
+  if(typeof startLivePOV!=="function"){ $("callState").textContent="LiveKit not loaded"; return; }
+  try{ const room=await startLivePOV({hs:SV_HS, token:mxToken, userId:mxUserId, roomId:currentRoom, videoEl:$("callVid"), log:(m)=>$("callState").textContent=m});
+    const dc=()=>{ try{ room&&room.disconnect&&room.disconnect(); }catch{} };
+    activeCall={stop:dc, hangup:dc}; lkRoom=room; micOn=true;
+    const mb=$("callMic"); if(mb){ mb.disabled=false; mb.textContent="🎙 Mute"; } }
+  catch(e){ $("callState").textContent="✗ "+e.message; } }
+const _mic=document.getElementById("callMic"); if(_mic) _mic.onclick=async()=>{ if(!lkRoom) return; micOn=!micOn; try{ await lkRoom.localParticipant.setMicrophoneEnabled(micOn); }catch{} _mic.textContent=micOn?"🎙 Mute":"🔇 Mic off"; };
+function openCall(room,label,caseId){ if(!mxToken){ $("mxState").textContent="paste operator token + Link first"; $("mxTok").focus(); return; }
+  currentRoom=room; activeRoom=room; renderIncomingBanner(); renderCalls();
+  let url="medic.html?room="+encodeURIComponent(room)+"&auto=1"; if(caseId) url+="&caseId="+encodeURIComponent(caseId);
+  window.open(url,"svMedic"); }   // open/reuse the medic tab and connect immediately
+function answerCall(c){ openCall(c.matrixRoomId||SV_ROOM, c.id+" · "+c.name, c.id); }
+const _lk=document.getElementById("callLK"); if(_lk) _lk.onclick=()=>startLK();
+const _p2p=document.getElementById("callP2P"); if(_p2p) _p2p.onclick=()=>startP2P();
+const _cb=document.getElementById("callBack"); if(_cb) _cb.onclick=()=>$("callView").classList.remove("show"); // stop viewing; the call is not closed
+
+// ---- auto-detect incoming SV1 calls in ANY joined room → surface in the dashboard ----
+const incomingCalls = new Map(); // roomId -> { sender }
+function scanEvents(rid, evs){
+  for(const ev of evs||[]){
+    if(ev.sender===mxUserId) continue;                 // ignore our own events
+    if(ev.type==="m.room.message" && (ev.content?.body||"").startsWith("SV1|")){
+      let msg; try{ msg=JSON.parse(ev.content.body.slice(4)); }catch{ continue; }
+      if(msg.kind==="offer") showIncomingCall(rid, ev.sender);
+      else if(msg.kind==="hangup") clearIncomingCall(rid);
+    } else if(/call\.member|rtc\.member|call\.invite/.test(ev.type||"")){
+      const c=ev.content||{};                          // MatrixRTC / Element Call membership
+      const active = c.call_id || (Array.isArray(c.memberships)&&c.memberships.length) || Object.keys(c).length>0;
+      if(active) showIncomingCall(rid, ev.sender); else clearIncomingCall(rid);
+    }
+  }
+}
+function showIncomingCall(rid, sender){
+  const prev=incomingCalls.get(rid);
+  if(prev){ prev.sender=sender; } else incomingCalls.set(rid,{sender});
+  renderIncomingBanner();
+}
+function clearIncomingCall(rid){ incomingCalls.delete(rid); renderIncomingBanner(); }
+function renderIncomingBanner(){
+  const box=$("incomingBox"); if(!box) return; box.innerHTML="";
+  for(const [rid,info] of incomingCalls){
+    const d=document.createElement("div"); d.className="call incoming"+(rid===activeRoom?" active":"");
+    d.innerHTML=`<div class="r1"><span class="id">📞 CALL</span><span class="ring">${rid===activeRoom?"● ON AIR":"INCOMING"}</span></div>`+
+      `<div class="who">${(info.sender||"caller").replace(/^@/,"").split(":")[0]}</div>`+
+      `<div class="meta"><span>${rid.replace(/^!/,"").slice(0,18)}…</span></div>`+
+      `<button class="ans">📞 Answer</button>`;
+    d.querySelector(".ans").onclick=()=>answerSenderCall(rid, info.sender);
+    box.appendChild(d);
+  }
+}
+function answerSenderCall(rid, sender){ openCall(rid, (sender||"").replace(/^@/,"").split(":")[0]||rid); }
+async function watchRoomForCalls(){
+  if(!mxToken) return;
+  const enc=encodeURIComponent, auth={Authorization:"Bearer "+mxToken};
+  const joinInvites=async(d)=>{ for(const rid of Object.keys(d.rooms?.invite||{})){ try{ await fetch(SV_HS+"/_matrix/client/v3/rooms/"+enc(rid)+"/join",{method:"POST",headers:{...auth,"Content-Type":"application/json"},body:"{}"}); }catch{} } };
+  let since=null;
+  try{ // accept invites + backfill recent offers across all joined rooms, then stream new ones
+    const init=await fetch(SV_HS+"/_matrix/client/v3/sync?timeout=0",{headers:auth}).then(r=>r.json());
+    since=init.next_batch;
+    await joinInvites(init);
+    for(const [rid,rm] of Object.entries(init.rooms?.join||{})) scanEvents(rid, rm.timeline?.events);
+  }catch{}
+  while(true){
+    try{
+      const d=await fetch(SV_HS+"/_matrix/client/v3/sync?timeout=25000&since="+enc(since),{headers:auth}).then(r=>r.json());
+      since=d.next_batch;
+      await joinInvites(d);                                   // auto-accept room invites → we receive their calls
+      for(const [rid,rm] of Object.entries(d.rooms?.join||{})) scanEvents(rid, rm.timeline?.events);
+    }catch{ await new Promise(r=>setTimeout(r,2000)); }
+  }
+}
+watchRoomForCalls();
+
+function offset(){return [KYIV[0]+(Math.random()-0.5)*0.01, KYIV[1]+(Math.random()-0.5)*0.014];}
+function mkCall(c){
+  const [lat,lng]=c.ll||offset();
+  const marker=L.circleMarker([lat,lng],{radius:c.sev==="crit"?10:8,color:COLOR[c.sev],fillColor:COLOR[c.sev],fillOpacity:.85,weight:2}).addTo(map);
+  const call={id:c.id,name:c.name,injury:c.injury,sev:c.sev,sector:c.sector,status:c.status,operator:c.operator,
+              matrixRoomId:c.matrixRoomId||null,
+              address:c.address||"", situation:c.situation||"", danger:c.danger||"Unknown",
+              etaDeadline:Date.now()+(c.eta||8)*60000, lat,lng,marker};
+  marker.on("click",()=>selectCall(call.id));
+  calls.push(call); bindPopup(call); return call;
+}
+function bindPopup(c){c.marker.bindPopup(
+  `<b>${c.id} — ${c.name}</b><br>${c.injury}<br>`+
+  (c.address?`📍 ${c.address}<br>`:"")+
+  (c.situation?`🩹 ${c.situation}<br>`:"")+
+  `⚠️ ${c.danger} · ${c.sector}<br>▷ ${c.operator}<br>🚑 ETA ${eta(c)}`);}
+function eta(c){const ms=c.etaDeadline-Date.now();if(ms<=0)return"ARRIVED";const s=Math.floor(ms/1000);return `${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`;}
+
+function selectCall(id){
+  selectedId=id; const c=calls.find(x=>x.id===id); if(!c)return;
+  map.panTo([c.lat,c.lng]); c.marker.openPopup();
+  $("selbox").innerHTML=`<div class="t">${c.id} — ${c.name}</div><div class="s">${c.injury}`+
+    (c.address?`<br>📍 ${c.address}`:"")+
+    (c.situation?`<br>🩹 ${c.situation}`:"")+
+    `<br>⚠️ ${c.danger} · ${c.sector}<br>▷ ${c.operator} · 🚑 ${eta(c)}</div>`+
+    `<img id="caseImg" style="width:100%;border-radius:8px;margin-top:8px;display:none;border:1px solid var(--border)">`+
+    `<div id="caseImgNote" style="font-size:11px;color:var(--dim);margin-top:6px">Loading case media…</div>`+
+    `<button id="casePov" class="accent" style="margin-top:6px">📺 View live POV</button>`;
+  $("casePov").onclick=()=>answerCall(c);   // open the live POV in THIS operator tab (overlay), not a new tab
+  loadCaseMedia(id);
+  // pre-fill assignee to this caller
+  fillAssignee(c.id+" — "+c.name+" (person)");
+  renderCalls();
+}
+// Show the case's latest glasses image (from backend events) when a case is opened.
+async function loadCaseMedia(id){
+  try{
+    const snap=await fetch("/api/cases/"+encodeURIComponent(id)).then(r=>r.json());
+    const imgs=(snap.events||[]).filter(e=>e.type==="guidance.image"||(e.payload&&e.payload.kind==="image"));
+    const last=imgs[imgs.length-1];
+    const src=last&&last.payload&&(last.payload.url||last.payload.dataUrl);
+    const im=$("caseImg"), note=$("caseImgNote"); if(!im) return;
+    if(src){ im.src=src; im.style.display="block"; note.textContent="Latest image for this case"; }
+    else { note.textContent="No still image yet — the POV is live video (open View live POV)."; }
+  }catch{ const n=$("caseImgNote"); if(n) n.textContent="Could not load case media."; }
+}
+function fillAssignee(sel){
+  const a=$("assignee"); a.innerHTML="";
+  const opts=[...calls.map(c=>c.id+" — "+c.name+" (person)"), ...OPERATORS.map(o=>o+" (operator)")];
+  for(const o of opts){const e=document.createElement("option");e.textContent=o;a.appendChild(e);}
+  if(sel) a.value=sel;
+}
+
+function renderCalls(){
+  const box=$("calls"); box.innerHTML="";
+  for(const c of calls){
+    const d=document.createElement("div");
+    d.className="call "+c.sev+(c.id===selectedId?" sel":"");
+    const incoming = c.operator==="(unassigned)" || ["waiting","new"].includes(String(c.status).toLowerCase());
+    if(incoming) d.classList.add("incoming");
+    if((c.matrixRoomId||SV_ROOM)===activeRoom) d.classList.add("active");
+    d.innerHTML=`<div class="r1"><span class="id">${c.id}</span>`+
+      (incoming?`<span class="ring">📞 INCOMING</span>`:`<span class="sev ${c.sev}">${({crit:"CRITICAL",urg:"URGENT",ok:"STABLE"})[c.sev]}</span>`)+`</div>
+      <div class="who">${c.name} — ${c.injury}</div>
+      <div class="meta"><span>${c.sector} · ${c.status}</span><span class="eta" id="eta_${c.id}">🚑 ${eta(c)}</span></div>
+      <div class="meta"><span class="op">▷ ${c.operator}</span></div>`+
+      (incoming?`<button class="ans">📞 Answer</button>`:``);
+    d.onclick=()=>selectCall(c.id);
+    const ab=d.querySelector(".ans"); if(ab) ab.onclick=(ev)=>{ev.stopPropagation(); answerCall(c);};
+    box.appendChild(d);
+  }
+  const live=calls.filter(c=>c.operator!=="(unassigned)").length, wait=calls.length-live;
+  $("cLive").textContent=`● ${live} live`; $("cWait").textContent=`● ${wait} waiting`;
+}
+
+function renderTasks(){
+  const box=$("tasks"); box.innerHTML="";
+  for(const t of tasks){
+    const d=document.createElement("div"); d.className="task";
+    const cls=t.assignee.includes("(operator)")?"op":"pl";
+    d.innerHTML=`<div class="t1"><span>${t.text}</span><span class="st ${t.status}">${({todo:"ASSIGNED",prog:"IN PROGRESS",done:"DONE"})[t.status]}</span></div>
+      <div class="as">→ <span class="${cls}">${t.assignee}</span> · ${t.prio}</div>`;
+    box.appendChild(d);
+  }
+}
+
+// New case form
+let fSev="crit";
+document.querySelectorAll("#fSev .s").forEach(s=>s.onclick=()=>{document.querySelectorAll("#fSev .s").forEach(x=>x.classList.remove("on"));s.classList.add("on");fSev=s.dataset.v;});
+$("newCase").onclick=()=>$("modal").classList.add("show");
+$("fCancel").onclick=()=>$("modal").classList.remove("show");
+$("fReq").onclick=()=>{const b=$("fReq"),el=$("fAddr");b.disabled=true;b.textContent="⏳ Requesting from external operator…";setTimeout(()=>{const got="Marktgasse 12, 1090 Wien — confirmed by external operator";el.value=el.value.trim()?el.value.trim()+" · "+got:got;b.textContent="✓ Address received";},2000);};
+async function postJSON(url, body){ const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}); return r.json(); }
+
+$("fCreate").onclick=async ()=>{
+  const ctr=map.getCenter();
+  $("modal").classList.remove("show");
+  const c=await postJSON("/api/cases",{ name:$("fName").value||"anon", injury:$("fInjury").value||"unspecified",
+    sev:fSev, sector:"manual", status:"new", operator:"(unassigned)",
+    address:$("fAddr").value.trim(), situation:$("fSit").value.trim(), danger:$("fDanger").value,
+    eta:Math.max(0,parseInt($("fEta").value||"8",10)), lat:ctr.lat, lng:ctr.lng });
+  $("fName").value="anon-caller";$("fInjury").value="";$("fAddr").value="";$("fSit").value="";$("fEta").value="8";$("fDanger").value="Unknown";
+  $("fReq").disabled=false;$("fReq").textContent="⤴ Request address from external operator";
+  upsertCaseFromServer(c); renderCalls(); fillAssignee(); selectCall(c.id);   // sync broadcast dedupes
+};
+
+$("simCall").onclick=async ()=>{
+  const sev=["crit","urg","urg","ok"][Math.floor(Math.random()*4)]; const ctr=map.getCenter();
+  const c=await postJSON("/api/cases",{ name:"anon-"+(1000+Math.floor(Math.random()*9000)),
+    injury:["bleeding","unconscious","burns","fracture"][Math.floor(Math.random()*4)], sev,
+    sector:"Sector "+"ABCD"[Math.floor(Math.random()*4)]+"-"+(1+Math.floor(Math.random()*4)),
+    status:"waiting", operator:"(unassigned)", danger:"Unknown",
+    eta:3+Math.floor(Math.random()*9), lat:ctr.lat+(Math.random()-0.5)*0.03, lng:ctr.lng+(Math.random()-0.5)*0.045 });
+  upsertCaseFromServer(c); renderCalls(); fillAssignee(); selectCall(c.id);
+};
+document.querySelectorAll(".seg").forEach(s=>s.onclick=()=>{document.querySelectorAll(".seg").forEach(x=>x.classList.remove("on"));s.classList.add("on");prio=s.dataset.p;});
+$("assignBtn").onclick=async ()=>{
+  const text=$("taskText").value.trim(); if(!text)return;
+  const t=await postJSON("/api/tasks",{text,assignee:$("assignee").value,prio,status:"todo"});
+  $("taskText").value=""; if(!tasks.find(x=>x.id===t.id)){ tasks.unshift(t); renderTasks(); }
+};
+
+// ---- data comes from the BACKEND (not mocked) — load + live multi-operator sync over WS ----
+function upsertCaseFromServer(c){
+  const latest=c.latestLocation||c.location||{};
+  const lat=latest.lat??c.lat, lng=latest.lng??c.lng;
+  const existing=calls.find(x=>x.id===c.id);
+  if(!existing) return mkCall({ ...c, ll: (lat!=null && lng!=null) ? [Number(lat),Number(lng)] : c.ll });
+  existing.name=c.name??existing.name; existing.injury=c.injury??existing.injury; existing.sev=c.sev??c.severity??existing.sev;
+  existing.sector=c.sector??existing.sector; existing.status=c.status??existing.status; existing.operator=c.operator??existing.operator;
+  existing.address=c.address??existing.address; existing.situation=c.situation??existing.situation; existing.danger=c.danger??existing.danger;
+  if(c.eta!=null) existing.etaDeadline=Date.now()+Math.max(0,parseInt(c.eta,10))*60000;
+  if(lat!=null && lng!=null){ existing.lat=Number(lat); existing.lng=Number(lng); existing.marker.setLatLng([existing.lat,existing.lng]); }
+  existing.marker.setStyle({color:COLOR[existing.sev]||COLOR.urg,fillColor:COLOR[existing.sev]||COLOR.urg,radius:existing.sev==="crit"?10:8});
+  bindPopup(existing); if(existing.id===selectedId) selectCall(existing.id);
+  return existing;
+}
+function updateCaseLocation(caseId, loc, caseData){
+  if(caseData) upsertCaseFromServer(caseData);
+  const c=calls.find(x=>x.id===caseId); if(!c||!loc) return;
+  c.lat=Number(loc.lat); c.lng=Number(loc.lng); c.marker.setLatLng([c.lat,c.lng]); bindPopup(c);
+  if(c.id===selectedId){ map.panTo([c.lat,c.lng]); selectCall(c.id); }
+}
+function wsUrl(){ return (location.protocol==="https:"?"wss":"ws")+"://"+location.host+"/api/ws"; }
+const sync=new WebSocket(wsUrl());
+sync.onopen=()=>sync.send(JSON.stringify({type:"subscribe_sync"}));
+sync.onmessage=(e)=>{ const m=JSON.parse(e.data);
+  if(m.type==="sync_snapshot"){
+    (m.cases||[]).forEach(upsertCaseFromServer);
+    (m.tasks||[]).forEach(t=>{ if(!tasks.find(x=>x.id===t.id)) tasks.push(t); });
+    fillAssignee(); renderCalls(); renderTasks(); if(calls[0]) selectCall(calls[0].id);
+  } else if(m.type==="sync" && m.entity==="case"){ upsertCaseFromServer(m.data); renderCalls(); fillAssignee(); }
+  else if(m.type==="sync" && m.entity==="case_removed"){ const c=calls.find(x=>x.id===m.data.id); if(c){ map.removeLayer(c.marker); calls=calls.filter(x=>x.id!==m.data.id); renderCalls(); fillAssignee(); } }
+  else if(m.type==="sync" && m.entity==="task"){ if(!tasks.find(x=>x.id===m.data.id)){ tasks.unshift(m.data); renderTasks(); } }
+  else if(m.type==="case.created"||m.type==="case.updated"){ upsertCaseFromServer(m.case); renderCalls(); fillAssignee(); }
+  else if(m.type==="case.deleted"){ const c=calls.find(x=>x.id===m.caseId); if(c){ map.removeLayer(c.marker); calls=calls.filter(x=>x.id!==m.caseId); renderCalls(); fillAssignee(); } }
+  else if(m.type==="location.updated"){ updateCaseLocation(m.caseId,m.location,m.case); renderCalls(); }
+};
+fillAssignee(); renderCalls(); renderTasks();
+
+// live: moving responder + ETA countdown + clock
+let rLat=KYIV[0]+0.004,rLng=KYIV[1]+0.004;
+const resp=L.circleMarker([rLat,rLng],{radius:7,color:"#00e0ff",fillColor:"#00e0ff",fillOpacity:.9,weight:2}).addTo(map).bindTooltip("Responder R1 (live)");
+setInterval(()=>{rLat+=(Math.random()-0.5)*0.0008;rLng+=(Math.random()-0.5)*0.0008;resp.setLatLng([rLat,rLng]);},2500);
+let s=0; setInterval(()=>{s++;$("upd").textContent=`● online · ${s}s`;
+  for(const c of calls){const el=$("eta_"+c.id);if(el)el.textContent="🚑 "+eta(c);bindPopup(c);}
+},1000);
+
+// emulate ambulances driving toward the nearest active case (or CCP)
+const ambIcon=()=>L.divIcon({html:"🚑",className:"",iconSize:[24,24]});
+const ambulances=[];
+function spawnAmbulance(label){const [la,ln]=offset();const m=L.marker([la,ln],{icon:ambIcon()}).addTo(map).bindTooltip(label);ambulances.push({m,lat:la,lng:ln,label});}
+spawnAmbulance("Ambulance 1"); spawnAmbulance("Ambulance 2");
+setInterval(()=>{
+  const targets=calls.length?calls:[{lat:KYIV[0],lng:KYIV[1]}];
+  for(const a of ambulances){
+    let t=targets[0],best=Infinity;
+    for(const c of targets){const d=(c.lat-a.lat)**2+(c.lng-a.lng)**2;if(d<best){best=d;t=c;}}
+    const dx=t.lat-a.lat,dy=t.lng-a.lng,dist=Math.hypot(dx,dy)||1,step=0.0011;
+    a.lat+=dx/dist*Math.min(step,dist); a.lng+=dy/dist*Math.min(step,dist);
+    a.m.setLatLng([a.lat,a.lng]);
+  }
+},1200);
+</script>
+</body>
+</html>

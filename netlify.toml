@@ -1,0 +1,12 @@
+# Deploy the static site (everything in operator-web/public) to Netlify.
+# The demo, landing, console, map and mockups are all static and work without
+# the Node server. (Only the glasses-sim <-> operator live WebRTC pairing needs
+# the Node signaling server / Matrix — not required to view the demo.)
+[build]
+  publish = "operator-web/public"
+  command = ""
+
+[[redirects]]
+  from = "/*"
+  to = "/:splat"
+  status = 200

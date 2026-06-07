@@ -1,0 +1,26 @@
+# dependencies
+node_modules/
+.pnp/
+
+# runtime / build output
+operator-web/data.json
+**/out/
+**/dist/
+**/build/
+*.log
+
+# secrets — never commit
+**/Secrets.xcconfig
+.env
+.env.*
+.dev.vars
+*.p8
+
+# iOS / Xcode
+DerivedData/
+*.xcuserstate
+**/xcuserdata/
+.build/
+
+# OS
+.DS_Store

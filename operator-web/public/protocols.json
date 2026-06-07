@@ -1,0 +1,59 @@
+{
+  "aed": {
+    "title": "Defibrillator (AED)",
+    "steps": [
+      "AED arrived — turn it ON and follow its voice",
+      "Bare the chest; dry it if wet, shave very hairy skin if a razor is in the kit",
+      "Stick pads on bare skin: one upper-right chest, one lower-left side",
+      "Plug the pads in; let the AED analyse — DON'T TOUCH the patient",
+      "Shock advised? Shout 'clear', make sure no one touches, press the flashing button",
+      "Resume CPR immediately — push to the beat. It re-checks every 2 minutes"
+    ]
+  },
+  "cpr": {
+    "title": "CPR — cardiac arrest",
+    "steps": [
+      "Tap the shoulders, shout — any response?",
+      "No normal breathing? Start CPR now",
+      "Heel of hand on the centre of the chest, other hand on top",
+      "Push HARD & FAST — 5–6 cm deep, 110 per minute",
+      "Don't stop. Swap rescuer every 2 minutes if you tire"
+    ]
+  },
+  "breaths": {
+    "title": "Rescue breaths (30:2)",
+    "steps": [
+      "After 30 compressions, give 2 rescue breaths",
+      "Tilt the head back, lift the chin, pinch the nose",
+      "Seal your mouth over theirs — 2 slow breaths (1s each)",
+      "Watch the chest rise, then resume compressions"
+    ]
+  },
+  "breathing": {
+    "title": "Check breathing / airway",
+    "steps": [
+      "Tilt the head back, lift the chin",
+      "Look, listen and feel for breathing — 10 seconds",
+      "Breathing normally? Put them in the recovery position",
+      "Not breathing normally? Start CPR"
+    ]
+  },
+  "bleeding": {
+    "title": "Severe bleeding",
+    "steps": [
+      "Press HARD directly on the wound with cloth or your hands",
+      "Pack a deep wound with gauze/cloth and keep pressing",
+      "Limb bleed that won't stop? Apply a tourniquet high & tight",
+      "Write down the time the tourniquet went on"
+    ]
+  },
+  "recovery": {
+    "title": "Recovery position",
+    "steps": [
+      "Kneel beside them",
+      "Place the far arm across the chest, the near arm out at a right angle",
+      "Roll them toward you onto their side",
+      "Tilt the head back to keep the airway open; check breathing"
+    ]
+  }
+}

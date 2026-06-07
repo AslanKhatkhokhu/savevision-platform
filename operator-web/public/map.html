@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SaveVision — Live operations map</title>
+<!-- Leaflet (online). OpenStreetMap tiles + Nominatim geocoding: no API key,
+     and casualty locations are NOT sent to Google. For production, self-host
+     tiles + geocoder (MapLibre + your own stack) to keep data fully in-house. -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  :root{--bg:#0d1117;--panel:#161b22;--border:#2a323d;--fg:#e6edf3;--dim:#8b949e;--accent:#00c98d;--accfg:#03110b;--share:#00e0ff;--ops:#ffb020;--danger:#ff4d4d;}
+  *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;}
+  html,body{height:100%;background:var(--bg);color:var(--fg);}
+  #map{position:absolute;inset:0;}
+  .leaflet-container{background:#0a0e13;}
+  .leaflet-tile{filter:brightness(.7) contrast(1.05) hue-rotate(170deg) invert(.92) saturate(.6);}
+
+  .panel{position:absolute;top:12px;left:12px;z-index:1000;width:312px;background:#0d1117ee;border:1px solid var(--border);border-radius:12px;padding:12px;backdrop-filter:blur(4px);}
+  .panel h1{font-size:15px;} .panel h1 span{color:var(--accent);}
+  .sub{font-size:11px;color:var(--dim);margin-bottom:10px;}
+  .row{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;}
+  button{background:var(--panel);color:var(--fg);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:12px;font-weight:600;cursor:pointer;}
+  button.on{background:var(--accent);color:var(--accfg);border-color:var(--accent);}
+  .seg{display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+  .seg button{border:none;border-radius:0;flex:1;}
+  .lab{font-size:11px;color:var(--dim);margin:6px 0 3px;text-transform:uppercase;letter-spacing:.5px;}
+  .share-btn.on{background:var(--share);color:#03110b;border-color:var(--share);}
+  .ops-btn.on{background:var(--ops);color:#2a1c02;border-color:var(--ops);}
+  .items{margin-top:8px;max-height:32vh;overflow:auto;display:flex;flex-direction:column;gap:5px;}
+  .item{display:flex;align-items:center;gap:7px;font-size:12px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:6px 8px;}
+  .item .d{width:9px;height:9px;border-radius:50%;flex:0 0 auto;}
+  .item .nm{flex:1;overflow:hidden;}
+  .item .nm small{display:block;color:var(--dim);font-size:10px;}
+  .item .eta{font-family:ui-monospace,monospace;color:var(--ops);font-size:11px;}
+  .item .x{cursor:pointer;color:var(--dim);}
+  .status{position:absolute;top:12px;right:12px;z-index:1000;background:#0d1117ee;border:1px solid var(--border);border-radius:999px;padding:6px 12px;font-size:12px;color:var(--dim);}
+  .status b{color:var(--accent);}
+  .viewbadge{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);z-index:1000;background:#0d1117ee;border:1px solid var(--border);border-radius:999px;padding:6px 14px;font-size:12px;}
+  .viewbadge b.share{color:var(--share);}
+  .hint{font-size:11px;color:var(--dim);margin-top:6px;}
+
+  /* popup form */
+  .leaflet-popup-content{margin:10px 12px;min-width:230px;}
+  .pop label{display:block;font-size:11px;color:#555;margin:6px 0 2px;font-weight:600;}
+  .pop input,.pop textarea{width:100%;font-size:13px;padding:5px 7px;border:1px solid #ccc;border-radius:6px;}
+  .pop textarea{resize:vertical;}
+  .pop .save{margin-top:8px;background:#0a7d5a;color:#fff;border:none;border-radius:6px;padding:7px 10px;font-weight:700;cursor:pointer;width:100%;}
+  .pop .reqaddr{margin-top:5px;width:100%;background:#10202c;color:#00b3d6;border:1px solid #1d4a5a;border-radius:6px;padding:6px;font-size:11px;cursor:pointer;font-weight:600;}
+  .pop .seg2{display:flex;gap:4px;margin-top:4px;}
+  .pop .seg2 button{flex:1;font-size:11px;padding:5px;}
+  .card-view b{font-size:14px;} .card-view .addr{color:#444;font-size:12px;margin:3px 0;}
+  .card-view .sit{font-size:12px;margin:3px 0;} .card-view .eta{font-weight:700;color:#b06b00;}
+  .card-view .vb{font-size:10px;padding:1px 6px;border-radius:999px;border:1px solid #bbb;color:#555;}
+</style>
+</head>
+<body>
+<div id="map"></div>
+
+<div class="panel">
+  <h1>SaveVision <span>· Live map</span></h1>
+  <div class="sub">OpenStreetMap · no API key · auto-updating</div>
+
+  <div class="lab">Tool</div>
+  <div class="row">
+    <button id="mSelect" class="on">Select</button>
+    <button id="mPoint">＋ Incident</button>
+    <button id="mRoute">✚ Route</button>
+    <button id="finishRoute" style="display:none">Finish route</button>
+  </div>
+
+  <div class="lab">New item visible to</div>
+  <div class="seg">
+    <button id="visShare" class="share-btn on">👁 Wearer + ops</button>
+    <button id="visOps" class="ops-btn">🛡 Operators only</button>
+  </div>
+
+  <div class="lab">Preview view</div>
+  <div class="seg">
+    <button id="asOps" class="on">As operator</button>
+    <button id="asWearer">As wearer</button>
+  </div>
+
+  <div class="lab">Incidents &amp; routes</div>
+  <div class="items" id="items"></div>
+  <div class="row" style="margin-top:8px"><button id="clearAll">Clear all</button></div>
+  <div class="hint">Incident mode: click the map → fill address (auto-filled), situation &amp; ambulance ETA.</div>
+</div>
+
+<div class="status" id="status">● <b>online</b> · updated 0s ago</div>
+<div class="viewbadge" id="viewbadge">Showing <b class="share">everything</b> (operator view)</div>
+
+<script>
+const KYIV = [50.4501, 30.5234];
+const map = L.map("map").setView(KYIV, 13);
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "© OpenStreetMap" }).addTo(map);
+
+let mode = "select", newVis = "share", viewAs = "ops";
+const items = [];                 // incidents + routes
+let routePts = [], routeTmp = null, pending = null;
+const COLOR = { share: "#00e0ff", ops: "#ffb020" };
+const $ = (id) => document.getElementById(id);
+
+function setMode(m){
+  mode = m;
+  ["mSelect","mPoint","mRoute"].forEach(id=>$(id).classList.remove("on"));
+  $({select:"mSelect",point:"mPoint",route:"mRoute"}[m]).classList.add("on");
+  $("finishRoute").style.display = m==="route" ? "" : "none";
+  map.getContainer().style.cursor = m==="select" ? "" : "crosshair";
+  if(m!=="route") cancelRoute();
+}
+$("mSelect").onclick=()=>setMode("select");
+$("mPoint").onclick =()=>setMode("point");
+$("mRoute").onclick =()=>setMode("route");
+$("visShare").onclick=()=>{newVis="share";$("visShare").classList.add("on");$("visOps").classList.remove("on");};
+$("visOps").onclick  =()=>{newVis="ops";$("visOps").classList.add("on");$("visShare").classList.remove("on");};
+$("asOps").onclick   =()=>{viewAs="ops";$("asOps").classList.add("on");$("asWearer").classList.remove("on");applyView();};
+$("asWearer").onclick=()=>{viewAs="wearer";$("asWearer").classList.add("on");$("asOps").classList.remove("on");applyView();};
+
+map.on("click",(e)=>{
+  if(mode==="point") createIncident(e.latlng);
+  else if(mode==="route"){
+    routePts.push(e.latlng);
+    if(routeTmp) routeTmp.setLatLngs(routePts);
+    else routeTmp = L.polyline(routePts,{color:COLOR[newVis],weight:5,opacity:.9,dashArray:"1 10"}).addTo(map);
+  }
+});
+
+// ---- incidents (address + situation + ambulance ETA) ----
+async function reverseGeocode(latlng){
+  try{
+    const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latlng.lat}&lon=${latlng.lng}&zoom=18`,
+      { headers:{ "Accept-Language":"en" }});
+    const j = await r.json();
+    return j.display_name || "";
+  }catch{ return ""; }
+}
+async function createIncident(latlng){
+  const marker = L.circleMarker(latlng,{radius:9,color:COLOR[newVis],fillColor:COLOR[newVis],fillOpacity:.85,weight:2}).addTo(map);
+  pending = { id:"i"+items.length+"_"+Math.floor(performance.now()), type:"incident", layer:marker, latlng, vis:newVis };
+  marker.bindPopup(editForm("…loading address…")).openPopup();
+  const addr = await reverseGeocode(latlng);
+  if(pending && pending.layer===marker){ const el=document.getElementById("f_addr"); if(el) el.value = addr; }
+}
+function editForm(addr){
+  return `<div class="pop">
+    <label>Title / injury</label><input id="f_title" value="Casualty — bleeding">
+    <label>Address <span style="font-weight:400;color:#888">— auto-filled, or type manually</span></label>
+    <textarea id="f_addr" rows="2" placeholder="No address? Type it here, or request it below.">${addr}</textarea>
+    <button type="button" class="reqaddr" id="reqBtn" onclick="svRequestAddress()">⤴ Request address from external operator</button>
+    <label>Situation</label><textarea id="f_sit" rows="2" placeholder="e.g. adult, leg wound, conscious"></textarea>
+    <label>Ambulance ETA (minutes)</label><input id="f_eta" type="number" min="0" value="8">
+    <button class="save" onclick="svSaveIncident()">Save incident</button>
+  </div>`;
+}
+// Manual address already works (the field is editable). This requests the
+// address from an EXTERNAL operator and fills it in on reply. In production it
+// sends a request event to another operator console; here we simulate the round-trip.
+window.svRequestAddress = function(){
+  const el = document.getElementById("f_addr"), b = document.getElementById("reqBtn");
+  if(!el || !b) return;
+  b.disabled = true; b.textContent = "⏳ Requesting from external operator…";
+  setTimeout(()=>{
+    const got = "Marktgasse 12, 1090 Wien — confirmed by external operator";
+    el.value = el.value.trim() ? el.value.trim() + " · " + got : got;
+    b.textContent = "✓ Address received";
+  }, 2500);
+};
+
+window.svSaveIncident = function(){
+  if(!pending) return;
+  pending.label = (document.getElementById("f_title").value||"Incident").trim();
+  pending.address = (document.getElementById("f_addr").value||"").trim();
+  pending.situation = (document.getElementById("f_sit").value||"").trim();
+  const eta = Math.max(0, parseInt(document.getElementById("f_eta").value||"0",10));
+  pending.etaDeadline = Date.now() + eta*60000;
+  items.push(pending);
+  refreshPopup(pending);
+  pending.layer.closePopup();
+  pending = null;
+  renderItems(); applyView(); setMode("select");
+};
+function fmtETA(it){
+  if(it.etaDeadline==null) return "—";
+  const ms = it.etaDeadline - Date.now();
+  if(ms<=0) return "ARRIVED";
+  const s=Math.floor(ms/1000); return `${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`;
+}
+function viewCard(it){
+  return `<div class="pop card-view">
+    <b>${it.label}</b> <span class="vb">${it.vis==="share"?"👁 wearer":"🛡 ops only"}</span>
+    ${it.address?`<div class="addr">📍 ${it.address}</div>`:""}
+    ${it.situation?`<div class="sit">🩹 ${it.situation}</div>`:""}
+    <div class="eta">🚑 Ambulance ETA: ${fmtETA(it)}</div>
+  </div>`;
+}
+function refreshPopup(it){ if(it.type==="incident") it.layer.bindPopup(viewCard(it)); }
+
+$("finishRoute").onclick=()=>{
+  if(routePts.length<2){cancelRoute();return;}
+  const label=prompt("Label for this route:","Evac route")||"Route";
+  const line=L.polyline(routePts,{color:COLOR[newVis],weight:5,opacity:.9}).addTo(map);
+  line.bindPopup(`<div class="pop card-view"><b>🛣 ${label}</b> <span class="vb">${newVis==="share"?"👁 wearer":"🛡 ops only"}</span></div>`);
+  items.push({id:"r"+items.length,type:"route",label,vis:newVis,layer:line});
+  if(routeTmp){map.removeLayer(routeTmp);routeTmp=null;} routePts=[];
+  renderItems(); applyView(); setMode("select");
+};
+function cancelRoute(){ if(routeTmp){map.removeLayer(routeTmp);routeTmp=null;} routePts=[]; }
+
+function renderItems(){
+  const box=$("items"); box.innerHTML="";
+  if(!items.length){ box.innerHTML='<div class="hint">No incidents yet.</div>'; return; }
+  for(const it of items){
+    const row=document.createElement("div"); row.className="item";
+    const eta = it.type==="incident" ? `<span class="eta" id="li_${it.id}">🚑 ${fmtETA(it)}</span>` : "";
+    row.innerHTML=`<span class="d" style="background:${COLOR[it.vis]}"></span>
+      <span class="nm">${it.type==="route"?"🛣":"📍"} ${it.label}<small>${it.address||(it.type==="route"?"route":"")}</small></span>
+      ${eta}<span class="x">✕</span>`;
+    row.querySelector(".x").onclick=()=>{ map.removeLayer(it.layer); items.splice(items.indexOf(it),1); renderItems(); };
+    row.querySelector(".nm").onclick=()=>{ map.panTo(it.layer.getLatLng?it.layer.getLatLng():it.layer.getBounds().getCenter()); it.layer.openPopup&&it.layer.openPopup(); };
+    box.appendChild(row);
+  }
+}
+function applyView(){
+  for(const it of items){
+    const vis = viewAs==="ops" || it.vis==="share";
+    if(vis){ if(!map.hasLayer(it.layer)) it.layer.addTo(map); }
+    else if(map.hasLayer(it.layer)) map.removeLayer(it.layer);
+  }
+  viewAs==="ops" ? liveResponder.addTo(map) : map.removeLayer(liveResponder);
+  $("viewbadge").innerHTML = viewAs==="ops"
+    ? 'Showing <b class="share">everything</b> (operator view)'
+    : 'Showing <b class="share">only what the wearer sees</b> (operator-only hidden)';
+}
+$("clearAll").onclick=()=>{ items.forEach(it=>map.removeLayer(it.layer)); items.length=0; cancelRoute(); renderItems(); };
+
+// built-ins: CCP (shared) + live moving responder (ops)
+L.marker(KYIV,{title:"CCP"}).addTo(map).bindTooltip("CCP",{permanent:true,direction:"top"});
+let rLat=KYIV[0]+0.004, rLng=KYIV[1]+0.004;
+const liveResponder=L.circleMarker([rLat,rLng],{radius:8,color:"#ffb020",fillColor:"#ffb020",fillOpacity:.9,weight:2}).addTo(map).bindTooltip("Responder R1 (live)");
+
+let secs=0;
+setInterval(()=>{ rLat+=(Math.random()-0.5)*0.0009; rLng+=(Math.random()-0.5)*0.0009; liveResponder.setLatLng([rLat,rLng]); },2500);
+setInterval(()=>{ secs++; $("status").innerHTML=`● <b>online</b> · updated ${secs}s ago`;
+  // live ETA countdown on popups + list
+  for(const it of items){ if(it.type!=="incident") continue;
+    const li=document.getElementById("li_"+it.id); if(li) li.textContent="🚑 "+fmtETA(it);
+    if(it.layer.isPopupOpen&&it.layer.isPopupOpen()) it.layer.setPopupContent(viewCard(it));
+  }
+},1000);
+
+renderItems();
+</script>
+</body>
+</html>

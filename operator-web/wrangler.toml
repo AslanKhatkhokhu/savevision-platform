@@ -1,0 +1,20 @@
+name = "savevision"
+main = "worker.js"
+compatibility_date = "2024-09-23"
+
+# Static frontend (the same public/ the Node dev server uses).
+[assets]
+directory = "./public"
+binding = "ASSETS"
+run_worker_first = true   # Worker sees the WS upgrade + /api before assets
+html_handling = "none"    # serve /medic.html etc. directly (our links use .html)
+
+# Durable Object that holds the rooms, sync clients, and case/task storage.
+[[durable_objects.bindings]]
+name = "HUB"
+class_name = "Hub"
+
+# SQLite-backed DO class — eligible on the Workers free plan.
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Hub"]

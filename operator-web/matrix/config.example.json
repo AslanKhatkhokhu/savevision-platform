@@ -1,0 +1,8 @@
+{
+  "_comment": "Copy to config.json and fill in. config.json is git-ignored. Either user+password OR accessToken.",
+  "homeserverUrl": "https://matrix.YOUR-DOMAIN",
+  "user": "svc-doctor",
+  "password": "REPLACE_ME",
+  "accessToken": "",
+  "elementCallUrl": "https://call.YOUR-DOMAIN"
+}

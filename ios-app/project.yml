@@ -1,0 +1,109 @@
+# SaveVision — xcodegen project spec
+#
+# Generate the Xcode project with:
+#   brew install xcodegen        # once
+#   cd ios-app && xcodegen generate
+#   open SaveVision.xcodeproj
+#
+# No .xcodeproj is committed — it is generated from this file so the repo stays
+# diff-friendly. Re-run `xcodegen generate` after editing this file or adding
+# source files.
+
+name: SaveVision
+
+options:
+  bundleIdPrefix: io.example
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    # DEVELOPMENT_TEAM is intentionally NOT set here — it comes from the gitignored
+    # Secrets.xcconfig (see configFiles on the target) so it survives regeneration
+    # and stays out of git. Do not add it here, or it will override the xcconfig.
+    SWIFT_VERSION: "5.9"
+    ENABLE_USER_SCRIPT_SANDBOXING: NO
+
+packages:
+  # Matrix client — prebuilt Rust SDK binaries (Apache-2.0). NOT Element X code.
+  MatrixRustSDK:
+    url: https://github.com/element-hq/matrix-rust-components-swift
+    exactVersion: "26.06.03"
+  # Native WebRTC framework (same one stoz3n-vision-agent uses).
+  # NOTE: 141.0.0 ships corrupt xcframework public-header paths (RTCMacros.h not
+  # found under Xcode's explicit modules — stasel/WebRTC #132). Fixed from 146+;
+  # pin the latest good release.
+  WebRTC:
+    url: https://github.com/stasel/WebRTC.git
+    exactVersion: "148.0.0"
+  # Meta Wearables Device Access Toolkit — glasses camera/mic + Ray-Ban Display.
+  MetaWearablesDAT:
+    url: https://github.com/facebook/meta-wearables-dat-ios
+    exactVersion: "0.7.0"
+  # LiveKit client — MatrixRTC media transport used by Element Call / Element X.
+  LiveKit:
+    url: https://github.com/livekit/client-sdk-swift.git
+    exactVersion: "2.14.1"
+  # Sentry SDK — reports crashes/errors to the self-hosted Bugsink ("rustrak").
+  Sentry:
+    url: https://github.com/getsentry/sentry-cocoa.git
+    majorVersion: "8.0.0"
+
+targets:
+  SaveVision:
+    type: application
+    platform: iOS
+    sources:
+      - path: SaveVision
+        excludes:
+          - "**/*.xcconfig" # not compiled/bundled; consumed via configFiles below
+          - "hook_outputs/**" # local agent logs/artifacts; never bundle into TestFlight
+          - "**/.DS_Store"
+    # Meta DAT credentials come from a gitignored Secrets.xcconfig (copy
+    # Secrets.example.xcconfig first). It defines MWDAT_APP_ID / MWDAT_CLIENT_TOKEN
+    # which Info.plist expands. Keeps the token out of git.
+    configFiles:
+      Debug: SaveVision/Secrets.xcconfig
+      Release: SaveVision/Secrets.xcconfig
+    # NOTE: do NOT add an `info:` block here — that makes xcodegen *generate*
+    # (overwrite) the plist. We keep a hand-authored Info.plist (MWDAT keys,
+    # permissions, background modes) and reference it via INFOPLIST_FILE.
+    settings:
+      base:
+        INFOPLIST_FILE: SaveVision/Info.plist
+        PRODUCT_BUNDLE_IDENTIFIER: io.example.savevision
+        PRODUCT_NAME: SaveVision
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        # App icon from Assets.xcassets/AppIcon.appiconset — required for
+        # TestFlight/App Store upload (injects CFBundleIconName + 120x120 icon).
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        TARGETED_DEVICE_FAMILY: "1" # iPhone only
+        OTHER_LDFLAGS: "$(inherited) -ObjC"
+    dependencies:
+      # MatrixRustSDK is a from-source *dynamic* framework — it must be embedded
+      # in the app bundle or the device build crashes at launch with
+      # "Library not loaded: @rpath/MatrixRustSDK.framework". (The other deps are
+      # binary xcframeworks that auto-embed.) Element X embeds it the same way.
+      - package: MatrixRustSDK
+        product: MatrixRustSDK
+        embed: true
+        codeSign: true
+      - package: WebRTC
+        product: WebRTC
+      - package: MetaWearablesDAT
+        product: MWDATCore
+      - package: MetaWearablesDAT
+        product: MWDATCamera
+      - package: MetaWearablesDAT
+        product: MWDATDisplay
+      # MWDATMockDevice lets you test the device/registration flow in the
+      # simulator without physical glasses. Safe to remove for release builds.
+      - package: MetaWearablesDAT
+        product: MWDATMockDevice
+      - package: LiveKit
+        product: LiveKit
+      - package: Sentry
+        product: Sentry

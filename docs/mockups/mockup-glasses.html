@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Glasses HUD mockup</title>
+<style>
+  :root { --hud:#00ff95; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html,body { width:100%; height:100%; overflow:hidden; background:#0b0f0d; font-family:system-ui,-apple-system,"Segoe UI",sans-serif; }
+  .glasses { position:relative; width:100vw; height:100vh; background:#0b0f0d; overflow:hidden; }
+
+  /* Abstract, non-graphic POV scene: looking down at ground + a figure outline. */
+  .pov { position:absolute; inset:0; background:
+      radial-gradient(120% 90% at 50% 120%, #20312b 0%, #0c100e 60%),
+      linear-gradient(180deg,#1a2330 0%, #141b16 55%, #0c0f0d 100%); }
+  .pov .ground { position:absolute; left:0; right:0; bottom:0; height:55%;
+      background:linear-gradient(180deg,#2a241c,#15110c); opacity:.9; transform:perspective(400px) rotateX(45deg); transform-origin:bottom; }
+  .pov .figure { position:absolute; left:24%; bottom:14%; width:54%; height:30%;
+      background:radial-gradient(60% 80% at 40% 50%, #3a4750, #232b30); border-radius:50% 50% 45% 45%/60% 60% 40% 40%; opacity:.85; filter:blur(.3px); }
+  .pov .limb { position:absolute; left:58%; bottom:16%; width:26%; height:9%; background:#39434a; border-radius:20px; transform:rotate(-12deg); opacity:.9; }
+
+  /* doctor's freehand annotation (cyan): circle on the placement point + arrow */
+  .ann { position:absolute; inset:0; }
+
+  /* instruction banner */
+  .banner { position:absolute; left:0; right:0; top:0; padding:16px 20px;
+      background:linear-gradient(#000d,#0000); color:var(--hud); font-size:24px; font-weight:800; text-shadow:0 1px 4px #000; }
+
+  /* example diagram inset */
+  .imgcard { position:absolute; right:14px; bottom:14px; width:210px; border:2px solid var(--hud);
+      border-radius:10px; overflow:hidden; background:#06120d; }
+  .imgcard .cap { display:flex; justify-content:space-between; font-size:12px; padding:4px 8px; color:var(--hud); background:#000a; }
+
+  /* direction widget */
+  .compass { position:absolute; left:16px; bottom:22px; width:96px; height:96px; }
+  .compass .ring { position:absolute; inset:0; border:2px solid #ffffff44; border-radius:50%; }
+  .compass .arrow { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:48px; color:var(--hud); transform:rotate(38deg); }
+  .compass .lbl { position:absolute; bottom:-20px; left:50%; transform:translateX(-50%); white-space:nowrap; font-size:12px; color:var(--hud); }
+
+  /* Neural Band gesture feedback pill */
+  .gesture { position:absolute; left:50%; bottom:16px; transform:translateX(-50%);
+      background:#000b; border:1px solid var(--hud); color:var(--hud); padding:6px 14px; border-radius:999px; font-size:13px; }
+  .tag { position:absolute; top:14px; right:16px; font:600 12px ui-monospace,monospace; color:#9fb4ad; letter-spacing:2px; }
+</style></head>
+<body>
+  <div class="glasses">
+    <div class="pov"><div class="ground"></div><div class="figure"></div><div class="limb"></div></div>
+
+    <svg class="ann" viewBox="0 0 600 600">
+      <!-- circle marking tourniquet placement (high on the limb) -->
+      <ellipse cx="406" cy="486" rx="34" ry="26" fill="none" stroke="#00ff95" stroke-width="5"/>
+      <!-- arrow pointing to it -->
+      <path d="M300 360 Q360 400 392 462" fill="none" stroke="#00e0ff" stroke-width="5" stroke-linecap="round"/>
+      <path d="M392 462 l-22 -4 m22 4 l-6 -21" fill="none" stroke="#00e0ff" stroke-width="5" stroke-linecap="round"/>
+    </svg>
+
+    <div class="tag">REC ● LIVE</div>
+    <div class="banner">Apply tourniquet — high &amp; tight</div>
+
+    <div class="imgcard">
+      <svg viewBox="0 0 210 120" width="210" height="120">
+        <rect width="210" height="120" fill="#06120d"/>
+        <!-- schematic limb + tourniquet band + windlass -->
+        <rect x="20" y="46" width="170" height="30" rx="15" fill="#1d2a24" stroke="#2f4438"/>
+        <rect x="70" y="38" width="20" height="46" rx="5" fill="none" stroke="#00ff95" stroke-width="4"/>
+        <line x1="80" y1="38" x2="80" y2="16" stroke="#00ff95" stroke-width="4"/>
+        <circle cx="80" cy="14" r="6" fill="none" stroke="#00ff95" stroke-width="4"/>
+        <text x="105" y="106" fill="#00ff95" font-size="11" font-family="sans-serif">windlass · twist to tighten</text>
+      </svg>
+      <div class="cap"><span>How to apply</span><span>1/2</span></div>
+    </div>
+
+    <div class="compass">
+      <div class="ring"></div><div class="arrow">↑</div>
+      <div class="lbl">Collection point · 40 m</div>
+    </div>
+
+    <div class="gesture">index-pinch · acknowledge</div>
+  </div>
+</body></html>

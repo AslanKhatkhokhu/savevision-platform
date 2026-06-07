@@ -1,0 +1,133 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>SaveVision — Clinical Concept for Review</title>
+<style>
+@page{size:A4;margin:20mm 18mm 20mm;}
+*{box-sizing:border-box;}
+body{font-family:Georgia,"Times New Roman",serif;color:#1a1a1a;line-height:1.5;font-size:11.4pt;margin:0;}
+h1,h2,h3,.brand,.kicker{font-family:"Helvetica Neue",Arial,sans-serif;}
+.cover{height:245mm;display:flex;flex-direction:column;page-break-after:always;}
+.brand{font-size:13pt;font-weight:700;letter-spacing:3px;color:#0a7d5a;text-transform:uppercase;}
+.rule{height:3px;width:64px;background:#0a7d5a;margin:9mm 0 7mm;}
+.cover h1{font-size:30pt;line-height:1.15;margin-bottom:5mm;}
+.cover .sub{font-size:13.5pt;color:#444;font-style:italic;max-width:150mm;}
+.cover .spacer{flex:1;}
+.kicker{font-size:9.5pt;letter-spacing:1px;text-transform:uppercase;color:#666;margin-bottom:5mm;}
+.notice{border:1px solid #ccc;border-left:4px solid #b00020;background:#fbf7f7;padding:6mm 7mm;font-family:"Helvetica Neue",Arial,sans-serif;font-size:8.8pt;line-height:1.45;color:#333;}
+.notice b{color:#b00020;}
+.section{page-break-before:always;}
+h2{font-size:17pt;color:#0a7d5a;border-bottom:2px solid #e2e2e2;padding-bottom:2mm;margin-bottom:4mm;}
+h3{font-size:12.5pt;margin:5mm 0 2mm;}
+p{margin:0 0 3mm;} ul,ol{margin:0 0 3mm 6mm;} li{margin:0 0 1.8mm;}
+table{width:100%;border-collapse:collapse;margin:3mm 0;font-family:"Helvetica Neue",Arial,sans-serif;font-size:9.6pt;page-break-inside:avoid;}
+th,td{border:1px solid #d5d5d5;padding:2.4mm 3mm;text-align:left;vertical-align:top;}
+th{background:#eef4f2;}
+.q{background:#f3f8f6;border:1px solid #d8e6e0;border-radius:4px;padding:4mm 6mm;margin:3mm 0;}
+.q b{color:#0a7d5a;}
+.disc li{font-size:10pt;}
+.foot{margin-top:7mm;font-size:8.5pt;color:#888;font-family:Arial;}
+dt{font-weight:700;font-family:"Helvetica Neue",Arial,sans-serif;color:#0a7d5a;margin-top:2.5mm;} dd{margin:0 0 1.5mm;}
+figure{margin:4mm 0;page-break-inside:avoid;text-align:center;}
+figure img{width:100%;border:1px solid #ccc;border-radius:6px;display:block;}
+figure img.sq{width:96mm;margin:0 auto;}
+figcaption{font-size:9pt;color:#555;font-family:"Helvetica Neue",Arial,sans-serif;margin-top:1.5mm;text-align:left;}
+</style></head><body>
+
+<div class="cover">
+  <div class="brand">SaveVision</div><div class="rule"></div>
+  <h1>Remote Operator-Guided First Aid<br>— Clinical Concept for Review</h1>
+  <div class="sub">A licensed clinician, seeing through a bystander's glasses, coaches the simple non-invasive actions that decide survival in the first minutes of trauma. We are asking for your clinical review.</div>
+  <div class="spacer"></div>
+  <div class="kicker">For clinician review · June 2026 · 7 pages</div>
+  <div class="notice"><b>Notice.</b> This is a concept document for clinical review — <b>not</b> medical advice and not a treatment protocol for use without a connected, licensed clinician. In the live system every operator must be a currently licensed clinician working within their scope; the on-scene civilian performs every physical action while the operator only guides. Real emergencies require professional EMS and evacuation as early as possible.</div>
+</div>
+
+<div class="section">
+  <h2>1. What SaveVision is</h2>
+  <p><strong>The problem.</strong> In trauma — especially in conflict — most preventable deaths happen in the first minutes, from causes a bystander could address: massive external haemorrhage and a lost airway. The scarce resource is rarely willing hands; it is <em>trained judgment</em>, which usually cannot arrive in time.</p>
+  <p><strong>The idea.</strong> SaveVision lends that judgment over a wire. An untrained bystander wearing smart glasses streams their first-person view to a remote, licensed clinician who sees what they see and coaches them by voice and with lightweight visual overlays through simple, non-invasive lifesaving actions until EMS/evacuation arrives.</p>
+  <p><strong>One-way by design.</strong> The clinician sends guidance (text, a freehand drawing on the live view, a reference image, a direction). The wearer only publishes their view; they do not send data back. The clinician decides, the bystander acts.</p>
+  <p><strong>Where it fits.</strong> SaveVision is decision-support that <em>augments</em>, never replaces, professional emergency care and evacuation. Medical guidance is the first use; the same pipeline can later support evacuation, search & rescue, and other expert-guided tasks.</p>
+</div>
+
+<div class="section">
+  <h2>The system in use</h2>
+  <p>Three views make up SaveVision: the clinician's console, what the bystander sees on the glasses, and the coordinator's triage console.</p>
+  <figure><img src="mockups/operator.png" alt="Clinician console"><figcaption><b>Clinician view.</b> The live first-person view with freehand annotation (marking exactly where to act), a location mini-map, and one-tap guidance — instruction text, a reference image, or a direction.</figcaption></figure>
+  <figure><img class="sq" src="mockups/glasses-hud.png" alt="Glasses HUD"><figcaption><b>What the bystander sees.</b> An instruction banner, the clinician's drawing over their own view, a how-to diagram, and a direction marker — read hands-free on the display.</figcaption></figure>
+  <figure><img src="mockups/ops-console.png" alt="Operations console"><figcaption><b>Coordinator console.</b> Call triage by severity, a situational map of people and responders, and task assignment to people or operators.</figcaption></figure>
+</div>
+
+<div class="section">
+  <h2>2. Scope of guided care (MARCH)</h2>
+  <p>Care is organised around the <strong>MARCH</strong> priorities and bounded strictly to what a layperson can safely perform under real-time coaching.</p>
+  <table>
+    <thead><tr><th>Step</th><th>Operator guidance</th><th>Bystander action</th></tr></thead>
+    <tbody>
+      <tr><td><b>M</b> — Massive haemorrhage</td><td>Identify the bleeding point; coach high-and-tight tourniquet, wound packing, and firm direct pressure; mark and note the time</td><td>Applies tourniquet / packs wound / holds pressure; does not loosen the tourniquet</td></tr>
+      <tr><td><b>A</b> — Airway</td><td>Assess responsiveness/breathing; coach positioning or recovery position; protect a possible spinal injury when moving is unavoidable</td><td>Positions the casualty as directed</td></tr>
+      <tr><td><b>R</b> — Respiration</td><td>Watch for worsening breathing / obvious chest wound; coach positioning within layperson limits</td><td>Reports what they see; repositions</td></tr>
+      <tr><td><b>C</b> — Circulation</td><td>Recognise shock; keep casualty flat and still; reassess bleeding control</td><td>Keeps casualty flat, monitors</td></tr>
+      <tr><td><b>H</b> — Hypothermia / Head</td><td>Coach covering and insulating (cold worsens bleeding); leave the tourniquet visible</td><td>Covers and insulates the casualty</td></tr>
+    </tbody>
+  </table>
+  <h3>The clinical boundary (deliberate and permanent)</h3>
+  <p>SaveVision coaches <strong>non-invasive</strong> care only. It is not a remote operating theatre: no invasive procedures, no actions beyond what an untrained person can safely perform with coaching. When in doubt, the system de-escalates and prioritises getting the casualty to professional care.</p>
+</div>
+
+<div class="section">
+  <h2>3. What an operator may and may not send</h2>
+  <table>
+    <thead><tr><th>Allowed</th><th>Prohibited / restricted</th></tr></thead>
+    <tbody>
+      <tr><td>Step-by-step instructions within the operator's licence and scope</td><td>Anything beyond the operator's scope or that requires invasive skill</td></tr>
+      <tr><td>Calm reassurance; triage decisions; evacuation guidance</td><td>Instructions that endanger the bystander (e.g. entering an unsafe scene)</td></tr>
+      <tr><td>Freehand overlays, reference diagrams, a direction marker</td><td>Collection or relay of militarily useful information (positions, movements, targeting) — this protects the bystander's civilian status under IHL</td></tr>
+      <tr><td>Requests for what the bystander sees</td><td>Insecure transmission/recording of a casualty's identity</td></tr>
+    </tbody>
+  </table>
+  <p>The wounded, and those caring for them, are protected under international humanitarian law. The channel is deliberately <strong>medical-only</strong>; that discipline is what lets a civilian wear these glasses into a conflict and remain, in fact and in law, a civilian. All media is end-to-end encrypted and metadata is minimised.</p>
+</div>
+
+<div class="section">
+  <h2>4. Limits, risks &amp; what this is not</h2>
+  <ul>
+    <li><strong>Not a substitute for EMS.</strong> It buys minutes and improves bystander action; arranged evacuation remains the goal.</li>
+    <li><strong>Scene safety first.</strong> The first guidance is often "are you safe?" — the system tells the bystander to take cover or not intervene when the scene is unsafe.</li>
+    <li><strong>Connectivity &amp; power dependent.</strong> Degrades gracefully to audio-only and on-device offline checklists when networks fail.</li>
+    <li><strong>Psychological load.</strong> An untrained person doing this is under extreme stress; the operator must support them, and outcomes are never guaranteed even with flawless guidance.</li>
+    <li><strong>Do no harm.</strong> Bad guidance can injure; operators are vetted, licensed, and work within scope, and the system favours the conservative action.</li>
+    <li><strong>Liability &amp; consent.</strong> Operates within Good-Samaritan principles and informed consent; this is decision-support, not a clinician-patient relationship with the reader.</li>
+  </ul>
+</div>
+
+<div class="section">
+  <h2>5. What we would like you to review</h2>
+  <p>We are seeking your clinical judgement on the following before any pilot:</p>
+  <div class="q"><b>1. MARCH scoping.</b> Is the layperson action column safe and correctly bounded? Anything we should remove or add?</div>
+  <div class="q"><b>2. Quick actions.</b> The operator UI offers one-tap prompts (STOP/unsafe, Direct pressure, Tourniquet, Recovery position). Are these the right defaults, and is the wording safe?</div>
+  <div class="q"><b>3. Hard limits.</b> What must <em>never</em> be guided to an untrained bystander, even by a clinician, over this medium?</div>
+  <div class="q"><b>4. Tourniquet coaching.</b> Is our guidance (high &amp; tight, mark the time, do not loosen, leave visible) complete and correct for lay application?</div>
+  <div class="q"><b>5. Failure &amp; escalation.</b> When should the system explicitly tell the bystander to stop and focus only on evacuation?</div>
+  <div class="q"><b>6. Operator credentialing.</b> What vetting, scope limits, and supervision would you require for remote operators?</div>
+</div>
+
+<div class="section">
+  <h2>Disclaimers &amp; glossary</h2>
+  <ul class="disc">
+    <li>This is a concept document and general emergency-guidance material — not individualised medical or legal advice, and it creates no clinician-patient relationship.</li>
+    <li>Every operator in the live system must be a currently licensed clinician acting within their scope; the bystander performs all physical actions.</li>
+    <li>SaveVision is decision-support that augments, never replaces, professional EMS and evacuation.</li>
+    <li>Clinical sequences are illustrative of how guided care is structured, not a protocol for unsupervised use.</li>
+    <li>All sessions are end-to-end encrypted; identifying and operationally sensitive information is minimised and protected.</li>
+  </ul>
+  <dl>
+    <dt>MARCH</dt><dd>Trauma priority sequence: Massive haemorrhage, Airway, Respiration, Circulation, Hypothermia/Head.</dd>
+    <dt>TCCC</dt><dd>Tactical Combat Casualty Care — the battlefield trauma framework MARCH derives from.</dd>
+    <dt>Tourniquet</dt><dd>A device applied tightly above a limb wound to stop life-threatening bleeding.</dd>
+    <dt>Golden hour / platinum ten minutes</dt><dd>The early window in which intervention most changes survival.</dd>
+    <dt>IHL</dt><dd>International Humanitarian Law — protects the wounded and those who care for them.</dd>
+    <dt>CASEVAC / CCP</dt><dd>Casualty evacuation / casualty collection point.</dd>
+  </dl>
+  <p class="foot">SaveVision — remote, expert-guided assistance on smart glasses. Medical guidance is the first feature. This document does not constitute medical or legal advice.</p>
+</div>
+
+</body></html>

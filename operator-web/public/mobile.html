@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<title>SaveVision — Caller app (mobile)</title>
+<style>
+  :root{--bg:#0b0f0d;--card:#12181f;--border:#243040;--fg:#eafff5;--dim:#8b9aa3;--accent:#00c98d;--accfg:#03110b;--danger:#ff4d4d;--hud:#00e0ff;}
+  *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,-apple-system,"SF Pro Display","Segoe UI",sans-serif;}
+  body{background:#05070a;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;}
+  /* phone frame */
+  .phone{width:390px;max-width:100vw;height:844px;max-height:96vh;background:var(--bg);border-radius:42px;border:10px solid #1a1f26;position:relative;overflow:hidden;box-shadow:0 30px 80px #000a;}
+  .notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:150px;height:26px;background:#1a1f26;border-radius:0 0 16px 16px;z-index:5;}
+  .statusbar{display:flex;justify-content:space-between;padding:10px 26px 0;font-size:12px;color:var(--fg);}
+  .scr{position:absolute;inset:0;padding:54px 22px 26px;display:flex;flex-direction:column;}
+  .brand{font-weight:800;font-size:20px;text-align:center;} .brand span{color:var(--accent);}
+  .sub{text-align:center;color:var(--dim);font-size:13px;margin-top:3px;}
+
+  .seg{display:flex;border:1px solid var(--border);border-radius:10px;overflow:hidden;margin:16px 0;}
+  .seg button{flex:1;background:transparent;border:none;color:var(--fg);padding:9px;font-size:12.5px;font-weight:600;}
+  .seg button.on{background:var(--card);color:var(--hud);}
+
+  .devcard{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;}
+  .devcard .ic{font-size:24px;} .devcard .nm{font-weight:600;} .devcard .st{font-size:12px;color:var(--accent);}
+  .devcard .dot{margin-left:auto;width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);}
+
+  .spacer{flex:1;}
+  .callbtn{width:200px;height:200px;border-radius:50%;border:none;align-self:center;background:radial-gradient(circle at 50% 40%,#ff6a6a,#d61f1f);color:#fff;font-size:22px;font-weight:800;cursor:pointer;box-shadow:0 0 0 0 #ff4d4d66;animation:pulse 1.8s infinite;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;}
+  .callbtn small{font-weight:600;font-size:12px;opacity:.9;}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 #ff4d4d55}70%{box-shadow:0 0 0 26px #ff4d4d00}100%{box-shadow:0 0 0 0 #ff4d4d00}}
+  .foot{text-align:center;color:var(--dim);font-size:11.5px;margin-top:16px;}
+
+  /* connecting / connected states */
+  .big{text-align:center;font-size:22px;font-weight:800;margin-top:8px;}
+  .dots::after{content:"";animation:dots 1.4s steps(4,end) infinite;}
+  @keyframes dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}}
+  .pov{flex:1;margin:14px 0;border-radius:16px;border:1px solid var(--border);background:radial-gradient(120% 90% at 50% 120%,#20312b,#0c100e 60%),linear-gradient(180deg,#1a2330,#0c0f0d);position:relative;overflow:hidden;}
+  .pov .figure{position:absolute;left:24%;bottom:16%;width:52%;height:30%;background:radial-gradient(60% 80% at 40% 50%,#3a4750,#232b30);border-radius:50% 50% 45% 45%/60% 60% 40% 40%;opacity:.8;}
+  .pov .badge{position:absolute;top:10px;left:10px;background:#000a;border:1px solid var(--hud);color:var(--hud);font-size:11px;padding:3px 8px;border-radius:999px;}
+  .pov .rec{position:absolute;top:10px;right:10px;color:#ff7a7a;font-size:11px;}
+  .opcard{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px;display:flex;align-items:center;gap:12px;}
+  .opcard .av{width:42px;height:42px;border-radius:50%;background:#0e2a3a;color:var(--hud);display:flex;align-items:center;justify-content:center;font-weight:700;}
+  .opcard .nm{font-weight:600;} .opcard .st{font-size:12px;color:var(--accent);}
+  .opcard .tm{margin-left:auto;font-family:ui-monospace,monospace;color:var(--dim);}
+  .glasslink{display:flex;align-items:center;gap:8px;background:#0e221c;border:1px solid #1d5b46;color:var(--accent);border-radius:12px;padding:10px 12px;font-size:13px;margin-top:10px;}
+  .actions{display:flex;gap:10px;margin-top:auto;}
+  .actions button{flex:1;border:none;border-radius:14px;padding:14px;font-weight:700;font-size:15px;cursor:pointer;}
+  .end{background:var(--danger);color:#fff;} .mute{background:var(--card);color:var(--fg);border:1px solid var(--border)!important;}
+  .hidden{display:none!important;}
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="notch"></div>
+  <div class="statusbar"><span>9:41</span><span>SaveVision ▴ ▾ 100%</span></div>
+
+  <!-- SCREEN 1: idle / call -->
+  <div class="scr" id="s1">
+    <div class="brand">Save<span>Vision</span></div>
+    <div class="sub">Reach a medic who sees through your glasses</div>
+
+    <div class="seg" id="src">
+      <button class="on" data-src="glasses">👓 Smart glasses</button>
+      <button data-src="phone">📱 Phone camera</button>
+    </div>
+
+    <div class="devcard">
+      <span class="ic" id="devIc">👓</span>
+      <div><div class="nm" id="devNm">Ray-Ban Display</div><div class="st" id="devSt">Connected · ready</div></div>
+      <span class="dot"></span>
+    </div>
+
+    <div class="spacer"></div>
+    <button class="callbtn" id="callBtn">CALL<small>operational centre</small></button>
+    <div class="spacer"></div>
+    <div class="foot">One tap connects you to triage. Your live view links automatically once a medic answers.</div>
+  </div>
+
+  <!-- SCREEN 2: connecting -->
+  <div class="scr hidden" id="s2">
+    <div class="brand">Save<span>Vision</span></div>
+    <div class="spacer"></div>
+    <div style="text-align:center;font-size:60px">📞</div>
+    <div class="big">Connecting to<br>operations centre<span class="dots"></span></div>
+    <div class="sub" id="s2sub">Routing to the next available medic…</div>
+    <div class="sub" id="caseInfo" style="margin-top:8px"></div>
+    <div class="spacer"></div>
+    <div class="actions"><button class="mute" id="cancelBtn">Cancel</button></div>
+  </div>
+
+  <!-- SCREEN 3: connected + glasses auto-linked -->
+  <div class="scr hidden" id="s3">
+    <div class="opcard">
+      <div class="av">LK</div>
+      <div><div class="nm">Dr. Lena Kovač</div><div class="st">● Connected · triage nurse</div></div>
+      <span class="tm" id="timer">00:00</span>
+    </div>
+    <div class="glasslink" id="glasslink">👓 Glasses linked — streaming your point of view to the medic ✓</div>
+    <div class="sub" id="caseInfoLive" style="margin-top:8px"></div>
+    <div class="pov">
+      <div class="figure"></div>
+      <span class="badge" id="povBadge">👓 Glasses POV · live</span>
+      <span class="rec">● REC</span>
+    </div>
+    <div class="sub">Dr. Lena can see what you see and will guide you. Follow the on-glasses instructions.</div>
+    <div class="actions">
+      <button class="mute" id="muteBtn">🔇 Mute</button>
+      <button class="end" id="endBtn">End call</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+let source="glasses", timerInt=null, connectTimer=null, caseId=null, roomCode=null, locationTimer=null, callToken=0;
+const FALLBACK=[50.4501,30.5234];
+
+// source toggle (glasses vs phone) — both can place the first call
+document.querySelectorAll("#src button").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll("#src button").forEach(x=>x.classList.remove("on"));
+  b.classList.add("on"); source=b.dataset.src;
+  if(source==="glasses"){ $("devIc").textContent="👓"; $("devNm").textContent="Ray-Ban Display"; $("devSt").textContent="Connected · ready"; }
+  else{ $("devIc").textContent="📱"; $("devNm").textContent="Phone camera"; $("devSt").textContent="Ready · no glasses needed"; }
+});
+
+function show(id){["s1","s2","s3"].forEach(s=>$(s).classList.toggle("hidden",s!==id));}
+async function postJSON(url, body){
+  const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+  if(!r.ok) throw new Error((await r.json().catch(()=>({error:r.statusText}))).error||r.statusText);
+  return r.json();
+}
+function fallbackLocation(){
+  return { lat:FALLBACK[0]+(Math.random()-0.5)*0.01, lng:FALLBACK[1]+(Math.random()-0.5)*0.014, accuracyM:50, source:"simulated", ts:Date.now() };
+}
+function getLocation(){
+  return new Promise(resolve=>{
+    if(!navigator.geolocation) return resolve(fallbackLocation());
+    navigator.geolocation.getCurrentPosition(
+      p=>resolve({ lat:p.coords.latitude, lng:p.coords.longitude, accuracyM:p.coords.accuracy, heading:p.coords.heading, speedMps:p.coords.speed, source:"device", ts:Date.now() }),
+      ()=>resolve(fallbackLocation()),
+      { enableHighAccuracy:true, timeout:2500, maximumAge:5000 }
+    );
+  });
+}
+function renderCaseInfo(){
+  const text=caseId?`Case ${caseId}${roomCode?` · room ${roomCode}`:""}`:"";
+  $("caseInfo").textContent=text; $("caseInfoLive").textContent=text;
+}
+async function createBackendCase(token){
+  try{
+    const loc=await getLocation();
+    const c=await postJSON("/api/cases",{
+      category:"medical", source, status:"waiting", sev:"urg", injury:"unspecified emergency",
+      name:"anon-"+(1000+Math.floor(Math.random()*9000)), danger:"Unknown",
+      initialLocation:loc,
+      deviceStatus:{ source, batteryPct:100, network:navigator.onLine?"online":"offline", userAgent:navigator.userAgent }
+    });
+    if(token!==callToken){ postJSON(`/api/cases/${c.id}/close`,{reason:"cancelled before connect"}).catch(()=>{}); return; }
+    caseId=c.id; roomCode=c.roomCode; renderCaseInfo(); startLocationUpdates();
+  }catch(e){ if(token===callToken) $("caseInfo").textContent="Backend case create failed: "+e.message; }
+}
+async function sendLocation(){ if(caseId) postJSON(`/api/cases/${caseId}/location`, await getLocation()).catch(()=>{}); }
+function startLocationUpdates(){ clearInterval(locationTimer); sendLocation(); locationTimer=setInterval(sendLocation,5000); }
+async function closeBackendCase(reason="closed"){
+  clearInterval(locationTimer); locationTimer=null;
+  const id=caseId; caseId=null; roomCode=null; renderCaseInfo();
+  if(id) postJSON(`/api/cases/${id}/close`,{reason}).catch(()=>{});
+}
+
+$("callBtn").onclick=()=>{
+  show("s2");
+  $("caseInfo").textContent="Creating backend case…"; $("caseInfoLive").textContent="";
+  $("s2sub").textContent = source==="glasses" ? "Routing to a medic · your glasses will link automatically…" : "Routing to a medic · your phone camera will share your view…";
+  const token=++callToken;
+  createBackendCase(token);
+  // simulate routing → operator answers
+  clearTimeout(connectTimer);
+  connectTimer=setTimeout(()=>{
+    if(token!==callToken) return;
+    show("s3"); renderCaseInfo();
+    // glasses auto-link copy reflects the chosen source
+    if(source==="glasses"){ $("glasslink").innerHTML="👓 Glasses linked — streaming your point of view to the medic ✓"; $("povBadge").textContent="👓 Glasses POV · live"; }
+    else{ $("glasslink").innerHTML="📱 Phone camera linked — streaming your view to the medic ✓"; $("povBadge").textContent="📱 Phone POV · live"; }
+    let t=0; clearInterval(timerInt); timerInt=setInterval(()=>{t++;$("timer").textContent=`${String(Math.floor(t/60)).padStart(2,"0")}:${String(t%60).padStart(2,"0")}`;},1000);
+  }, 2600);
+};
+$("cancelBtn").onclick=()=>{ callToken++; clearTimeout(connectTimer); closeBackendCase("cancelled by wearer"); show("s1"); };
+$("endBtn").onclick=()=>{ callToken++; clearTimeout(connectTimer); clearInterval(timerInt); closeBackendCase("ended by wearer"); show("s1"); };
+$("muteBtn").onclick=()=>{ const b=$("muteBtn"); b.textContent=b.textContent.includes("Mute")?"🔈 Unmute":"🔇 Mute"; };
+</script>
+</body>
+</html>

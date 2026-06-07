@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=600, height=600, initial-scale=1, user-scalable=no" />
+  <meta name="description" content="SaveVision — operator guidance, live map and reference photos on the glasses display." />
+  <meta name="mrbd-web-app-capable" content="yes" />
+  <title>SaveVision HUD</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="savevision.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+  <main class="hud" id="hud">
+    <section class="top">
+      <div class="brand">Save<span>Vision</span></div>
+      <div class="state" id="state">virtual HUD</div>
+    </section>
+
+    <section class="card" id="card">
+      <div class="eyebrow" id="kind">Waiting</div>
+      <div class="message" id="message">Operator messages, images, and locations will appear here.</div>
+      <img id="image" class="image" alt="operator reference" hidden />
+      <div class="location" id="location" hidden>
+        <div class="pin">⌖</div>
+        <div><div id="locLabel">Location</div><div id="coords" class="coords"></div></div>
+      </div>
+      <div id="hudmap" class="hudmap" hidden></div>
+      <div class="arrow" id="arrow" hidden>➜</div>
+    </section>
+
+    <footer class="hint">
+      <span id="case">Open with ?caseId=C-10&api=http://server</span>
+    </footer>
+  </main>
+
+  <script src="savevision.js"></script>
+</body>
+</html>

@@ -1,0 +1,243 @@
+require "shellwords"
+
+ROOT = File.expand_path("..", __dir__)
+APP_IDENTIFIER = "io.example.savevision"
+PROJECT = File.join(ROOT, "SaveVision.xcodeproj")
+SCHEME = "SaveVision"
+DEFAULT_TESTER_EMAIL = "tester@example.com"
+DEFAULT_TESTFLIGHT_GROUP = "External Testers"
+
+# Env-based App Store Connect auth. Recommended setup is an API key:
+#   APP_STORE_CONNECT_API_KEY_KEY_ID=...
+#   APP_STORE_CONNECT_API_KEY_ISSUER_ID=...
+#   APP_STORE_CONNECT_API_KEY_KEY_FILEPATH=/path/to/AuthKey_XXXX.p8
+# or:
+#   APP_STORE_CONNECT_API_KEY_PATH=/path/to/fastlane-api-key.json
+# If none are provided, fastlane falls back to Apple ID auth/cached session.
+def env_value(*names)
+  names.map { |name| ENV[name] }.find { |value| value && !value.strip.empty? }
+end
+
+def truthy?(value)
+  %w[1 true yes y].include?(value.to_s.downcase)
+end
+
+def app_store_connect_auth_options
+  api_key_path = env_value("APP_STORE_CONNECT_API_KEY_PATH", "PILOT_API_KEY_PATH")
+  return { api_key_path: api_key_path } if api_key_path
+
+  key_id = env_value("APP_STORE_CONNECT_API_KEY_KEY_ID", "APP_STORE_CONNECT_KEY_ID", "ASC_KEY_ID")
+  issuer_id = env_value("APP_STORE_CONNECT_API_KEY_ISSUER_ID", "APP_STORE_CONNECT_ISSUER_ID", "ASC_ISSUER_ID")
+  key_filepath = env_value("APP_STORE_CONNECT_API_KEY_KEY_FILEPATH", "APP_STORE_CONNECT_KEY_FILEPATH", "APP_STORE_CONNECT_KEY_FILE", "ASC_KEY_FILEPATH")
+  key_content = env_value("APP_STORE_CONNECT_API_KEY_KEY", "APP_STORE_CONNECT_KEY", "ASC_KEY_CONTENT")
+
+  return {} unless key_id && (key_filepath || key_content)
+
+  params = {
+    key_id: key_id,
+    is_key_content_base64: truthy?(env_value("APP_STORE_CONNECT_API_KEY_IS_KEY_CONTENT_BASE64", "ASC_KEY_CONTENT_BASE64"))
+  }
+  params[:issuer_id] = issuer_id if issuer_id
+  params[:key_filepath] = key_filepath if key_filepath
+  params[:key_content] = key_content if key_content
+
+  { api_key: app_store_connect_api_key(params) }
+end
+
+def csv_list(value)
+  value.to_s.split(",").map(&:strip).reject(&:empty?)
+end
+
+def testflight_groups(options)
+  csv_list(options[:groups] || options[:group] || ENV["TESTFLIGHT_GROUPS"] || ENV["TESTFLIGHT_GROUP"] || DEFAULT_TESTFLIGHT_GROUP)
+end
+
+def tester_email(options)
+  options[:email] || ENV["TESTFLIGHT_TESTER_EMAIL"] || DEFAULT_TESTER_EMAIL
+end
+
+def tester_first_name(options)
+  options[:first_name] || ENV["TESTFLIGHT_TESTER_FIRST_NAME"] || "Great"
+end
+
+def tester_last_name(options)
+  options[:last_name] || ENV["TESTFLIGHT_TESTER_LAST_NAME"] || "Khat"
+end
+
+def testflight_add_command(options)
+  groups = testflight_groups(options)
+  UI.user_error!("Set TESTFLIGHT_GROUP or pass groups:'Group Name'") if groups.empty?
+
+  cmd = [
+    "fastlane", "pilot", "add",
+    "--app_identifier", APP_IDENTIFIER,
+    "--email", tester_email(options),
+    "--first_name", tester_first_name(options),
+    "--last_name", tester_last_name(options),
+    "--groups", groups.join(",")
+  ]
+
+  username = env_value("PILOT_USERNAME", "FASTLANE_USER")
+  team_id = env_value("PILOT_TEAM_ID", "FASTLANE_ITC_TEAM_ID")
+  api_key_path = env_value("APP_STORE_CONNECT_API_KEY_PATH", "PILOT_API_KEY_PATH")
+
+  cmd.push("--username", username) if username
+  cmd.push("--team_id", team_id) if team_id
+  cmd.push("--api_key_path", api_key_path) if api_key_path
+
+  cmd.shelljoin
+end
+
+def xcconfig_value(key)
+  path = File.join(ROOT, "SaveVision/Secrets.xcconfig")
+  return nil unless File.exist?(path)
+
+  File.foreach(path) do |line|
+    next unless line =~ /^\s*#{Regexp.escape(key)}\s*=\s*(.+?)\s*$/
+    value = Regexp.last_match(1).strip
+    return nil if value.empty? || value.start_with?("REPLACE_WITH")
+    return value
+  end
+  nil
+end
+
+def developer_team_id
+  env_value("FASTLANE_TEAM_ID", "DEVELOPMENT_TEAM") || xcconfig_value("DEVELOPMENT_TEAM")
+end
+
+def build_number_for(options)
+  options[:build_number] || ENV["BUILD_NUMBER"] || Time.now.utc.strftime("%Y%m%d%H%M")
+end
+
+def generate_project
+  sh("cd #{ROOT.shellescape} && xcodegen generate")
+end
+
+def build_release_ipa(options)
+  generate_project
+  build_number = build_number_for(options)
+  build_app(
+    project: PROJECT,
+    scheme: SCHEME,
+    configuration: "Release",
+    clean: true,
+    export_method: "app-store",
+    output_directory: File.join(ROOT, "build/fastlane"),
+    output_name: "SaveVision-#{build_number}.ipa",
+    xcargs: "CURRENT_PROJECT_VERSION=#{build_number} -allowProvisioningUpdates",
+    export_xcargs: "-allowProvisioningUpdates",
+    export_options: {
+      method: "app-store",
+      signingStyle: "automatic",
+      uploadBitcode: false,
+      compileBitcode: false
+    }
+  )
+end
+
+def upload_ipa_to_testflight(ipa_path, options)
+  groups = testflight_groups(options)
+  build_number = build_number_for(options)
+  upload_to_testflight(
+    app_identifier: APP_IDENTIFIER,
+    ipa: ipa_path,
+    changelog: options[:changelog] || ENV["TESTFLIGHT_CHANGELOG"] || "SaveVision beta build #{build_number}",
+    skip_waiting_for_build_processing: truthy?(options[:skip_waiting] || ENV["PILOT_SKIP_WAITING_FOR_BUILD_PROCESSING"]),
+    distribute_external: !groups.empty?,
+    groups: groups,
+    notify_external_testers: true,
+    uses_non_exempt_encryption: truthy?(ENV["PILOT_USES_NON_EXEMPT_ENCRYPTION"]),
+    **app_store_connect_auth_options
+  )
+end
+
+def invite_external_tester(options)
+  sh(testflight_add_command(options))
+end
+
+def create_app_store_record(options)
+  itc_team_id = options[:itc_team_id] || ENV["FASTLANE_ITC_TEAM_ID"] || ENV["PRODUCE_ITC_TEAM_ID"]
+  UI.user_error!("Set FASTLANE_ITC_TEAM_ID or pass itc_team_id:... before creating the App Store Connect app") unless itc_team_id
+
+  produce(
+    username: env_value("PRODUCE_USERNAME", "FASTLANE_USER", "PILOT_USERNAME"),
+    app_identifier: APP_IDENTIFIER,
+    app_name: options[:app_name] || ENV["PRODUCE_APP_NAME"] || "SaveVision Wearer",
+    app_version: options[:app_version] || ENV["PRODUCE_VERSION"] || "0.1.0",
+    sku: options[:sku] || ENV["PRODUCE_SKU"] || "savevision-ios",
+    platform: "ios",
+    language: options[:language] || ENV["PRODUCE_LANGUAGE"] || "en-US",
+    team_id: developer_team_id,
+    itc_team_id: itc_team_id
+  )
+end
+
+def distribute_latest_build(options)
+  groups = testflight_groups(options)
+  UI.user_error!("Set TESTFLIGHT_GROUP or pass groups:'Group Name'") if groups.empty?
+
+  upload_to_testflight(
+    app_identifier: APP_IDENTIFIER,
+    distribute_only: true,
+    distribute_external: true,
+    groups: groups,
+    notify_external_testers: true,
+    app_version: options[:app_version] || ENV["PILOT_APP_VERSION"],
+    build_number: options[:build_number] || ENV["PILOT_BUILD_NUMBER"],
+    **app_store_connect_auth_options
+  )
+end
+
+def run_beta(options)
+  ipa_path = build_release_ipa(options)
+  upload_ipa_to_testflight(ipa_path, options)
+  invite_external_tester(options) unless truthy?(options[:skip_invite])
+end
+
+def run_invite(options)
+  invite_external_tester(options)
+end
+
+def run_distribute_latest(options)
+  distribute_latest_build(options)
+  invite_external_tester(options) unless truthy?(options[:skip_invite])
+end
+
+def run_create_app(options)
+  create_app_store_record(options)
+end
+
+def run_build_only(options)
+  build_release_ipa(options)
+end
+
+def lane_options(options)
+  options || {}
+end
+
+platform :ios do
+  desc "Build, upload to TestFlight, distribute to the TestFlight group, and invite tester@example.com by default"
+  lane :beta do |options|
+    run_beta(lane_options(options))
+  end
+
+  desc "Add/invite tester@example.com (or email:...) to an external TestFlight group"
+  lane :invite do |options|
+    run_invite(lane_options(options))
+  end
+
+  desc "Distribute the latest already-uploaded TestFlight build, then invite the tester"
+  lane :distribute_latest do |options|
+    run_distribute_latest(lane_options(options))
+  end
+
+  desc "Create the SaveVision App Store Connect / Developer Portal app record if it does not exist"
+  lane :create_app do |options|
+    run_create_app(lane_options(options))
+  end
+
+  desc "Archive/export an App Store IPA without uploading"
+  lane :build_only do |options|
+    run_build_only(lane_options(options))
+  end
+end

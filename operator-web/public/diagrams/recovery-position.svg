@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 160">
+  <rect width="240" height="160" fill="#06120d"/>
+  <text x="120" y="20" fill="#00ff95" font-family="sans-serif" font-size="13" font-weight="700" text-anchor="middle">RECOVERY POSITION</text>
+  <!-- ground -->
+  <line x1="20" y1="120" x2="220" y2="120" stroke="#2f4438" stroke-width="2"/>
+  <!-- body on side -->
+  <circle cx="60" cy="100" r="13" fill="none" stroke="#00e0ff" stroke-width="4"/>
+  <path d="M73 104 Q120 92 150 108 Q175 118 200 110" fill="none" stroke="#00e0ff" stroke-width="6" stroke-linecap="round"/>
+  <!-- top knee bent -->
+  <path d="M150 108 l8 -22 l18 6" fill="none" stroke="#00e0ff" stroke-width="5" stroke-linecap="round"/>
+  <text x="120" y="142" fill="#cfe" font-family="sans-serif" font-size="11" text-anchor="middle">On the side · head tilted · airway open</text>
+  <text x="120" y="155" fill="#9bb" font-family="sans-serif" font-size="10" text-anchor="middle">if breathing but unconscious (no spinal injury)</text>
+</svg>

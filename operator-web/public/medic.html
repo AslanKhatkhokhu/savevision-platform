@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SaveVision — Operator (Doctor)</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link rel="stylesheet" href="styles.css" />
+  <style>#medmap.big{position:fixed;inset:4vh 4vw;height:auto!important;z-index:3000;border:2px solid #00c98d;box-shadow:0 20px 80px #000b;}</style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">SaveVision <span class="role">Operator · Doctor</span></div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <button id="backConsole" style="background:#1b2230;color:#eafff5;border:1px solid #2a323d;border-radius:8px;padding:6px 12px;cursor:pointer">← Console</button>
+      <div id="status" class="status status--idle">Disconnected</div>
+    </div>
+  </header>
+
+  <main class="layout">
+    <!-- Live POV from the wearer, with a drawing layer on top. -->
+    <section class="stage">
+      <div class="stagewrap" id="stagewrap">
+        <video id="remoteVideo" autoplay playsinline></video>
+        <!-- Doctor draws here; strokes are sent to the wearer's display. -->
+        <canvas id="draw" class="draw"></canvas>
+        <div id="placeholder" class="placeholder">
+          <p>Enter the room code from the wearer's glasses to view their POV.</p>
+        </div>
+      </div>
+
+      <div class="tools">
+        <span class="tools__label">Draw</span>
+        <button class="tool is-active" data-color="#00e0ff" style="--c:#00e0ff" title="Cyan"></button>
+        <button class="tool" data-color="#ff4d4d" style="--c:#ff4d4d" title="Red"></button>
+        <button class="tool" data-color="#ffd400" style="--c:#ffd400" title="Yellow"></button>
+        <button class="tool" data-color="#00ff95" style="--c:#00ff95" title="Green"></button>
+        <button id="freezeBtn" class="ghost" title="Freeze the current frame to draw on">❄ Freeze</button>
+        <button id="clearBtn" class="ghost" title="Clear the wearer's overlay">Clear</button>
+        <button id="sendDrawBtn" disabled>Send drawing →</button>
+        <button id="freezeAnnot" title="Freeze the wearer's frame, place virtual objects on it, send it back">📸 Freeze &amp; annotate</button>
+        <button id="drawLive" title="Grab the live view and draw on it right away">✏️ Draw on live</button>
+      </div>
+    </section>
+
+    <!-- Operator controls. All channels are one-way: doctor → wearer. -->
+    <aside class="panel">
+      <div class="card">
+        <label>Matrix — live transport</label>
+        <p class="hint">Connect to the homeserver to post guidance into the room as threads.</p>
+        <input id="mxHs" class="plain" style="margin-bottom:6px" value="https://matrix.example.org" />
+        <input id="mxUser" class="plain" style="margin-bottom:6px" placeholder="user (e.g. savevision-bot)" value="operator" />
+        <input id="mxSecret" class="plain" type="password" style="margin-bottom:6px" placeholder="access token or password" value="" />
+        <input id="mxRoom" class="plain" style="margin-bottom:6px" placeholder="!room:server" value="!your-room:matrix.example.org" />
+        <button id="mxConnect" style="width:100%">Connect to Matrix</button>
+        <div id="mxStatus" class="hint"></div>
+        <button id="mxCall" style="width:100%;margin-top:6px">📺 Join live call (MatrixRTC)</button>
+        <button id="mxAnswer" style="display:none">Answer (SV1 — deprecated)</button>
+        <p class="hint">Joins the wearer's MatrixRTC / Element Call and shows their POV + audio. Connect to Matrix first. (The legacy SV1 P2P path is deprecated — MatrixRTC relays through the SFU, so it works on any network with no TURN.)</p>
+      </div>
+
+      <div class="card">
+        <label>Location map <button id="mapExpand" class="ghost" style="float:right;font-size:11px">⤢ Expand</button></label>
+        <p class="hint">Wearer's live position — scroll to zoom, drag to pan, Expand for a big view.</p>
+        <div id="medmap" style="width:100%;height:220px;border-radius:8px;overflow:hidden;background:#06120d"></div>
+        <button id="sendLoc" style="width:100%;margin-top:8px">📍 Send this location to glasses</button>
+        <div style="display:flex;gap:6px;margin-top:6px">
+          <button id="showMapG" style="flex:1">🗺 Show map on glasses</button>
+          <button id="hideMapG" style="flex:1">🗑 Remove map</button>
+        </div>
+        <div id="mapGState" class="hint"></div>
+        <div id="gpsSrc" class="hint">GPS: waiting…</div>
+        <div style="display:flex;gap:6px;margin-top:6px">
+          <button id="findAed" style="flex:1">🔌 Find AEDs</button>
+          <button id="routeAed" style="flex:1">🧭 Route to AED → glasses</button>
+        </div>
+        <div id="aedState" class="hint"></div>
+      </div>
+
+      <div class="card">
+        <label for="room">Room code <span style="font-weight:400;color:var(--fg-dim)">(local glasses-sim demo)</span></label>
+        <div class="row">
+          <input id="room" type="text" maxlength="6" placeholder="ABC123" autocomplete="off" />
+          <button id="joinBtn">Join</button>
+        </div>
+        <p class="hint">6 characters, shown on the wearer's phone/glasses.</p>
+      </div>
+
+      <div class="card">
+        <label>Instruction text</label>
+        <p class="hint">Shown as a banner on the wearer's display.</p>
+        <textarea id="guidance" rows="2" placeholder="e.g. Apply the tourniquet 5 cm above the wound"></textarea>
+        <button id="sendBtn" disabled>Send to display</button>
+        <p class="hint" style="margin-top:6px">MARCH quick-actions:</p>
+        <div class="quick">
+          <button class="chip danger" data-msg="STOP — scene unsafe, take cover">STOP / unsafe</button>
+          <button class="chip" data-msg="M: Apply firm direct pressure now">M · Pressure</button>
+          <button class="chip" data-msg="M: Apply tourniquet high and tight, note the time">M · Tourniquet</button>
+          <button class="chip" data-msg="M: Pack the wound firmly with gauze, keep pressure">M · Pack wound</button>
+          <button class="chip" data-msg="A: Open the airway — tilt the head back, clear the mouth">A · Airway</button>
+          <button class="chip" data-msg="R: Seal a chest wound with a non-porous cover taped on 3 sides">R · Chest seal</button>
+          <button class="chip" data-msg="C: Lay them flat, raise the legs, keep them still">C · Shock</button>
+          <button class="chip" data-msg="H: Keep them warm and protect the head; keep talking to them">H · Warm/head</button>
+          <button class="chip" data-msg="Roll them onto their side (recovery position)">Recovery</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <label>Example image</label>
+        <p class="hint">Send a reference diagram (e.g. how to pack a wound).</p>
+        <input type="file" id="imgInput" accept="image/*" class="file" />
+        <button id="sendImgBtn" disabled>Send image →</button>
+        <p class="hint">or tap a reference photo to send:</p>
+        <div class="gallery" id="gallery">
+          <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Tourniquet_CAT_training.jpg" data-l="Tourniquet (CAT)" title="Tourniquet">
+          <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Herz-Lungen-Wiederbelebung-Training_an_einer_Laerdal-Rescue-Anne.jpg" data-l="CPR (manikin)" title="CPR on manikin">
+          <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Recovery_position.jpg" data-l="Recovery position" title="Recovery position">
+        </div>
+      </div>
+
+      <div class="card">
+        <label>Map / direction</label>
+        <p class="hint">Shows a heading + label on the wearer's display.</p>
+        <input id="mapLabel" type="text" placeholder="Casualty collection point" class="plain" />
+        <div class="compass">
+          <button class="dir" data-bearing="0">↑ Ahead</button>
+          <button class="dir" data-bearing="90">→ Right</button>
+          <button class="dir" data-bearing="180">↓ Behind</button>
+          <button class="dir" data-bearing="270">← Left</button>
+        </div>
+        <button id="sendMapBtn" disabled>Send map →</button>
+      </div>
+
+      <div class="card">
+        <label>AI guidance — propose &amp; approve</label>
+        <p class="hint">Claude reads the current POV frame and proposes <b>MARCH</b>-structured guidance. You approve before anything reaches the wearer. <b>Costs money per click</b> — only if an Anthropic key is set; otherwise a free sample.</p>
+        <button id="aiGenBtn">🧠 Generate guidance</button>
+        <div id="aiProposal" class="proposal" style="display:none">
+          <div class="phint">Proposed — review before sending:</div>
+          <div id="aiText" style="white-space:pre-wrap;font-size:12px;margin:6px 0;max-height:200px;overflow:auto"></div>
+          <img id="aiImg" alt="proposed guidance" style="display:none" />
+          <div class="prow"><button id="aiApprove">✓ Approve &amp; send banner</button><button id="aiDiscard" class="ghost">✕ Discard</button></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <label>Live map on glasses</label>
+        <p class="hint">Show a real (OpenStreetMap) map on the wearer's display — toggle on/off.</p>
+        <button id="liveMapBtn" disabled>🗺 Turn live map ON</button>
+      </div>
+
+      <div class="card">
+        <label>Guidance protocols</label>
+        <p class="hint">Send a full step‑by‑step emergency protocol to the glasses (shown + spoken).</p>
+        <select id="protoSel" class="plain" style="width:100%"></select>
+        <button id="protoSend" style="width:100%;margin-top:6px">Send protocol → glasses</button>
+        <div id="protoState" class="hint"></div>
+      </div>
+
+      <div class="card">
+        <label>CPR assist</label>
+        <p class="hint">Plays a 110 bpm beat to the wearer over the live call (alongside your voice) and sends the breathing‑check + CPR steps to the glasses. Join the call first.</p>
+        <button id="cprBtn" style="width:100%">🫀 Start CPR mode (110 bpm)</button>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
+          <span style="font-size:11px;color:#8b9aa3;white-space:nowrap">Beat vol</span>
+          <input id="cprBeatVol" type="range" min="0" max="150" value="60" style="flex:1">
+          <button id="cprVoice" style="font-size:11px;white-space:nowrap">🎙 Voice on</button>
+        </div>
+        <p class="hint" style="margin:4px 0 0">Your voice is your live mic — lower the beat so your voice leads, or raise it to pace compressions.</p>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:6px">
+          <span style="font-size:11px;color:#8b9aa3;white-space:nowrap">Rate</span>
+          <button class="bpmBtn" data-bpm="100" style="flex:1;font-size:11px">100</button>
+          <button class="bpmBtn" data-bpm="110" style="flex:1;font-size:11px">110</button>
+          <button class="bpmBtn" data-bpm="120" style="flex:1;font-size:11px">120</button>
+          <button id="cprTest" style="flex:1;font-size:11px">▶ Test 5s</button>
+        </div>
+        <p class="hint" style="margin-top:6px">Send reference photo to glasses:</p>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button id="cprPhotoBreath" style="flex:1;font-size:11px">🫁 Check breathing</button>
+          <button id="cprPhotoCPR" style="flex:1;font-size:11px">🤚 CPR hands</button>
+          <button id="cprPhotoRec" style="flex:1;font-size:11px">↪️ Recovery</button>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:6px">
+          <button id="cprBreaths" style="flex:1;font-size:11px">😮‍💨 Rescue breaths (30:2)</button>
+          <button id="cprAed" style="flex:1;font-size:11px">🔌 How to use AED</button>
+        </div>
+        <div id="cprState" class="hint"></div>
+      </div>
+
+      <div class="card">
+        <label>Session log</label>
+        <ul id="log" class="log"></ul>
+      </div>
+    </aside>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
+  <script src="mx.js"></script>
+  <script src="rtc-view.js"></script>
+  <script src="call-matrix.js"></script>
+  <script src="operator.js"></script>
+  <script>
+  // Handoff from the console: auto-connect + watch the room, a Back-to-console button
+  // (call stays live), and a live location map you can zoom/expand.
+  (function(){
+    const p=new URLSearchParams(location.search);
+    const room=p.get("room"), caseId=p.get("caseId"), auto=p.get("auto");
+    // Shared: make sure Matrix is connected before any send (so guidance/images/maps actually reach the room).
+    window.svEnsureMX = async function(){
+      if(typeof MX==="undefined") return false;
+      if(MX.connected && MX.connected()) return true;
+      try{ const hs=(document.getElementById("mxHs")||{}).value||"", u=(document.getElementById("mxUser")||{}).value||"", s=(document.getElementById("mxSecret")||{}).value||""; const rm=room||(document.getElementById("mxRoom")||{}).value||""; await MX.login(hs,u,s); await MX.openCase(rm,{id:"session"}); return MX.connected(); }catch(e){ return false; }
+    };
+    const back=document.getElementById("backConsole");
+    if(back) back.onclick=()=>{ if(window.opener && !window.opener.closed){ try{window.opener.focus();}catch(e){} } else window.open("console.html","svConsole"); };
+    if(room){ const r=document.getElementById("mxRoom"); if(r) r.value=room; }
+    if(auto){
+      const cb=document.getElementById("mxConnect"); if(cb) cb.click();
+      let n=0; const t=setInterval(()=>{ n++;
+        if(typeof MX!=="undefined" && MX.connected && MX.connected()){ clearInterval(t); const w=document.getElementById("mxCall"); if(w) w.click(); }
+        else if(n>60) clearInterval(t);
+      },300);
+    }
+    let map=null, marker=null;
+    function ensureMap(lat,lng){
+      if(!window.L || !document.getElementById("medmap")) return;
+      if(!map){ map=L.map("medmap",{zoomControl:true}).setView([lat,lng],15); L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"© OpenStreetMap"}).addTo(map); marker=L.marker([lat,lng]).addTo(map); }
+      else { marker.setLatLng([lat,lng]); }   // keep the operator's chosen zoom/pan
+      setTimeout(()=>map.invalidateSize(),120);
+    }
+    const gpsEl=document.getElementById("gpsSrc"); const setGps=(t)=>{ if(gpsEl) gpsEl.textContent="GPS: "+t; };
+    async function pollLoc(){
+      // 1) REAL GPS from the wearer over Matrix (chat message with a "geo:lat,lng" line)
+      try{
+        if(typeof MX!=="undefined" && (await window.svEnsureMX()) && MX.roomId){
+          const msgs=await fetch(MX.hs+"/_matrix/client/v3/rooms/"+encodeURIComponent(MX.roomId)+"/messages?dir=b&limit=50",{headers:{Authorization:"Bearer "+MX.token}}).then(r=>r.json());
+          const geoEv=(msgs.chunk||[]).find(e=>e.type==="m.room.message" && /geo:-?\d/.test((e.content&&e.content.body)||""));
+          if(geoEv){ const m=/geo:([-0-9.]+),([-0-9.]+)/.exec(geoEv.content.body); if(m){ ensureMap(+m[1],+m[2]); setGps("● real (wearer) "+(+m[1]).toFixed(4)+","+(+m[2]).toFixed(4)); return; } }
+          const mloc=(msgs.chunk||[]).find(e=>e.type==="m.room.message" && e.content?.msgtype==="m.location" && e.content?.geo_uri);
+          if(mloc){ const m=/geo:([-0-9.]+),([-0-9.]+)/.exec(mloc.content.geo_uri); if(m){ ensureMap(+m[1],+m[2]); setGps("● real (m.location)"); return; } }
+          setGps("no location in room yet — wearer app must rebuild + allow location, and be in room "+String(MX.roomId).slice(0,16)+"…");
+        } else setGps("connect to Matrix to read the wearer's GPS");
+      }catch(e){ setGps("read error: "+e.message); }
+      // 2) fallback: backend case location, else Kyiv
+      if(!caseId){ ensureMap(50.4501,30.5234); return; }
+      try{ const l=await fetch("/api/cases/"+encodeURIComponent(caseId)+"/location/latest").then(r=>r.json());
+        if(l && l.lat!=null){ ensureMap(l.lat,l.lng); } else ensureMap(50.4501,30.5234); }
+      catch(e){ ensureMap(50.4501,30.5234); }
+    }
+    pollLoc(); setInterval(pollLoc,5000);
+    const ex=document.getElementById("mapExpand"), md=document.getElementById("medmap");
+    if(ex&&md) ex.onclick=()=>{ md.classList.toggle("big"); ex.textContent=md.classList.contains("big")?"⤡ Shrink":"⤢ Expand"; if(map) setTimeout(()=>map.invalidateSize(),140); };
+    const sl=document.getElementById("sendLoc");
+    if(sl) sl.onclick=async ()=>{
+      const c2 = marker ? marker.getLatLng() : (map?map.getCenter():null);
+      if(!c2){ sl.textContent="no location yet"; return; }
+      if(!(await window.svEnsureMX())){ sl.textContent="connect to Matrix first"; return; }
+      sl.textContent="rendering map…";
+      try{ const img=await buildMapImage(c2.lat,c2.lng, map?Math.min(17,map.getZoom()):16); await MX.send({kind:"image",dataUrl:img,caption:"📍 Your location"}); sl.textContent="✓ map sent to glasses"; }
+      catch(e){ sl.textContent="✗ "+e.message; }
+      setTimeout(()=>{ sl.textContent="📍 Send this location to glasses"; }, 1800);
+    };
+    // Build a real OSM map image around a point (CORS-enabled tiles) and send it to the glasses.
+    async function buildMapImage(lat,lng,z){
+      const n=Math.pow(2,z);
+      const fx=(lng+180)/360*n, fy=(1-Math.log(Math.tan(lat*Math.PI/180)+1/Math.cos(lat*Math.PI/180))/Math.PI)/2*n;
+      const cx=Math.floor(fx), cy=Math.floor(fy), size=256, grid=3, off=1;
+      const cv=document.createElement("canvas"); cv.width=size*grid; cv.height=size*grid; const ctx=cv.getContext("2d");
+      ctx.fillStyle="#06120d"; ctx.fillRect(0,0,cv.width,cv.height);
+      await Promise.all([...Array(grid)].flatMap((_,i)=>[...Array(grid)].map((__,j)=>new Promise(res=>{
+        const im=new Image(); im.crossOrigin="anonymous"; im.onload=()=>{ctx.drawImage(im,i*size,j*size);res();}; im.onerror=()=>res();
+        im.src="https://tile.openstreetmap.org/"+z+"/"+(cx-off+i)+"/"+(cy-off+j)+".png";
+      }))));
+      const mx=(fx-(cx-off))*size, my=(fy-(cy-off))*size;
+      ctx.fillStyle="#ff3b30"; ctx.beginPath(); ctx.arc(mx,my,13,0,7); ctx.fill(); ctx.strokeStyle="#fff"; ctx.lineWidth=3; ctx.stroke();
+      return cv.toDataURL("image/jpeg",0.85);
+    }
+    const smg=document.getElementById("showMapG"), hmg=document.getElementById("hideMapG"), mgs=document.getElementById("mapGState");
+    if(smg) smg.onclick=async ()=>{
+      const c2=marker?marker.getLatLng():(map?map.getCenter():null); if(!c2){ mgs.textContent="no location yet"; return; }
+      if(typeof MX==="undefined"||!MX.connected||!MX.connected()){ mgs.textContent="connect to Matrix first"; return; }
+      mgs.textContent="rendering map…";
+      try{ const dataUrl=await buildMapImage(c2.lat,c2.lng, map?map.getZoom():16); await MX.send({kind:"image",dataUrl,caption:"🗺 Map — your area"}); mgs.textContent="✓ map shown on glasses"; }
+      catch(e){ mgs.textContent="✗ "+e.message; }
+    };
+    if(hmg) hmg.onclick=async ()=>{ if(typeof MX!=="undefined"&&MX.connected&&MX.connected()){ try{ await MX.send({kind:"clear"}); mgs.textContent="✓ removed from glasses"; }catch(e){ mgs.textContent="✗ "+e.message; } } else mgs.textContent="connect to Matrix first"; };
+
+    // --- AEDs (defibrillators) from OpenStreetMap + walking route → glasses ---
+    let aeds=[], routeLine=null;
+    const aedSt=document.getElementById("aedState");
+    function aedIcon(){ return L.divIcon({className:"",html:'<div style="background:#0a8f4f;color:#fff;font:700 9px system-ui;padding:2px 4px;border-radius:4px;border:1px solid #fff">AED</div>',iconSize:[30,16]}); }
+    function distM(a,b){ const R=6371000,p1=a.lat*Math.PI/180,p2=b.lat*Math.PI/180,dp=(b.lat-a.lat)*Math.PI/180,dl=(b.lng-a.lng)*Math.PI/180; const h=Math.sin(dp/2)**2+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2; return 2*R*Math.asin(Math.sqrt(h)); }
+    function bearing(a,b){ const p1=a.lat*Math.PI/180,p2=b.lat*Math.PI/180,dl=(b.lng-a.lng)*Math.PI/180; const y=Math.sin(dl)*Math.cos(p2),x=Math.cos(p1)*Math.sin(p2)-Math.sin(p1)*Math.cos(p2)*Math.cos(dl); return (Math.atan2(y,x)*180/Math.PI+360)%360; }
+    function center(){ return marker?marker.getLatLng():(map?map.getCenter():null); }
+    function _fx(lng,z){ return (lng+180)/360*Math.pow(2,z); }
+    function _fy(lat,z){ return (1-Math.log(Math.tan(lat*Math.PI/180)+1/Math.cos(lat*Math.PI/180))/Math.PI)/2*Math.pow(2,z); }
+    async function buildRouteImage(coords){
+      let aLat=90,bLat=-90,aLng=180,bLng=-180;
+      coords.forEach(c=>{aLat=Math.min(aLat,c[0]);bLat=Math.max(bLat,c[0]);aLng=Math.min(aLng,c[1]);bLng=Math.max(bLng,c[1]);});
+      let z=18; for(;z>=11;z--){ if((_fx(bLng,z)-_fx(aLng,z))*256<700 && (_fy(aLat,z)-_fy(bLat,z))*256<700) break; }
+      const cLat=(aLat+bLat)/2,cLng=(aLng+bLng)/2,size=256,grid=4,off=2;
+      const tx0=Math.floor(_fx(cLng,z))-off, ty0=Math.floor(_fy(cLat,z))-off;
+      const cv=document.createElement("canvas"); cv.width=size*grid; cv.height=size*grid; const ctx=cv.getContext("2d");
+      ctx.fillStyle="#06120d"; ctx.fillRect(0,0,cv.width,cv.height);
+      await Promise.all([...Array(grid)].flatMap((_,i)=>[...Array(grid)].map((__,j)=>new Promise(res=>{ const im=new Image(); im.crossOrigin="anonymous"; im.onload=()=>{ctx.drawImage(im,i*size,j*size);res();}; im.onerror=()=>res(); im.src="https://tile.openstreetmap.org/"+z+"/"+(tx0+i)+"/"+(ty0+j)+".png"; }))));
+      const px=(lat,lng)=>[(_fx(lng,z)-tx0)*size,(_fy(lat,z)-ty0)*size];
+      ctx.strokeStyle="#00e0ff"; ctx.lineWidth=6; ctx.lineCap="round"; ctx.lineJoin="round"; ctx.beginPath();
+      coords.forEach((c,i)=>{ const p=px(c[0],c[1]); i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]); }); ctx.stroke();
+      const s=px(coords[0][0],coords[0][1]); ctx.fillStyle="#0a8f4f"; ctx.beginPath(); ctx.arc(s[0],s[1],11,0,7); ctx.fill(); ctx.strokeStyle="#fff"; ctx.lineWidth=3; ctx.stroke();
+      const e=coords[coords.length-1],ep=px(e[0],e[1]); ctx.fillStyle="#ff3b30"; ctx.beginPath(); ctx.arc(ep[0],ep[1],12,0,7); ctx.fill(); ctx.stroke();
+      ctx.font="bold 22px sans-serif"; ctx.fillStyle="#fff"; ctx.textAlign="center"; ctx.fillText("AED",ep[0],ep[1]-16);
+      return cv.toDataURL("image/jpeg",0.85);
+    }
+    function plotAeds(list){
+      aeds.forEach(m=>map.removeLayer(m)); aeds=[];
+      list.forEach(a=>{ const m=L.marker([a.lat,a.lng],{icon:aedIcon()}).addTo(map).bindTooltip(a.loc||"AED / defibrillator"); m._ll={lat:a.lat,lng:a.lng}; m.on("click",()=>routeTo(m._ll)); aeds.push(m); });
+    }
+    async function findAed(){
+      const c2=center(); if(!c2||!map){ if(aedSt)aedSt.textContent="no location yet"; return []; }
+      if(aedSt) aedSt.textContent="finding AEDs…";
+      // Near Vienna → use the baked OSM dataset (378 AEDs, instant); else live Overpass.
+      if(distM(c2,{lat:48.2082,lng:16.3738})<40000){
+        try{ const all=await fetch("aed-vienna.json").then(r=>r.json());
+          const near=all.filter(a=>distM(c2,{lat:a.lat,lng:a.lng})<3000).sort((x,y)=>distM(c2,{lat:x.lat,lng:x.lng})-distM(c2,{lat:y.lat,lng:y.lng})).slice(0,60);
+          if(near.length){ plotAeds(near); if(aedSt) aedSt.textContent=near.length+" Vienna AED(s) within 3 km — tap one, or Route to nearest"; return aeds; }
+        }catch(e){}
+      }
+      const q="[out:json][timeout:25];node[emergency=defibrillator](around:3000,"+c2.lat+","+c2.lng+");out;";
+      try{ const d=await fetch("https://overpass-api.de/api/interpreter",{method:"POST",body:"data="+encodeURIComponent(q)}).then(r=>r.json());
+        plotAeds((d.elements||[]).map(e=>({lat:e.lat,lng:e.lon,loc:(e.tags&&e.tags["defibrillator:location"])||""})));
+        if(aedSt) aedSt.textContent=aeds.length+" AED(s) nearby — tap one, or Route to nearest";
+        return aeds;
+      }catch(e){ if(aedSt) aedSt.textContent="AED search failed: "+e.message; return []; }
+    }
+    async function routeTo(dest){
+      const c2=center(); if(!c2){ if(aedSt)aedSt.textContent="no wearer location"; return; }
+      try{
+        const url="https://router.project-osrm.org/route/v1/foot/"+c2.lng+","+c2.lat+";"+dest.lng+","+dest.lat+"?overview=full&geometries=geojson";
+        const r=await fetch(url).then(x=>x.json());
+        if(routeLine) map.removeLayer(routeLine);
+        const coords=(r.routes&&r.routes[0]?r.routes[0].geometry.coordinates:[]).map(p=>[p[1],p[0]]);
+        if(coords.length){ routeLine=L.polyline(coords,{color:"#00e0ff",weight:5,opacity:.85}).addTo(map); map.fitBounds(routeLine.getBounds(),{padding:[30,30]}); }
+        const dist=r.routes&&r.routes[0]?Math.round(r.routes[0].distance):Math.round(distM(c2,dest));
+        const eta=r.routes&&r.routes[0]?Math.round(r.routes[0].duration/60):null;
+        const brg=Math.round(bearing(c2,dest));
+        if(aedSt) aedSt.textContent="AED "+dist+" m"+(eta!=null?(" · ~"+eta+" min walk"):"")+" → sent to glasses";
+        if(coords.length>1 && await window.svEnsureMX()){ try{ const ri=await buildRouteImage(coords); await MX.send({kind:"image", dataUrl:ri, caption:"Route to nearest AED"}); }catch(e){} }
+      }catch(e){ if(aedSt) aedSt.textContent="route failed: "+e.message; }
+    }
+    async function routeNearest(){ if(!aeds.length) await findAed(); const c2=center(); if(!c2||!aeds.length){ if(aedSt)aedSt.textContent="no AED found nearby"; return; } let best=aeds[0],bd=1e18; aeds.forEach(m=>{const d=distM(c2,m._ll); if(d<bd){bd=d;best=m;}}); routeTo(best._ll); }
+    const fa=document.getElementById("findAed"); if(fa) fa.onclick=findAed;
+    const ra=document.getElementById("routeAed"); if(ra) ra.onclick=routeNearest;
+  })();
+  </script>
+
+  <!-- Freeze & annotate: snapshot the wearer's frame, place virtual objects, send it back -->
+  <div id="annot" style="position:fixed;inset:0;background:#000b;display:none;align-items:center;justify-content:center;z-index:4000">
+    <div style="background:#0d1117;border:1px solid #2a323d;border-radius:14px;padding:12px;width:92vw;max-width:880px;max-height:94vh;overflow:auto">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <b style="color:#eafff5">Place objects on the wearer's view, then send to the glasses</b>
+        <button id="annotCancel" style="background:#1b2230;color:#eafff5;border:1px solid #2a323d;border-radius:8px;padding:6px 10px;cursor:pointer">✕ Close</button>
+      </div>
+      <div id="annotPalette" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px"></div>
+      <div id="annotStage" style="position:relative;width:100%;background:#000;border-radius:8px;overflow:hidden;touch-action:none;user-select:none">
+        <img id="annotImg" style="width:100%;display:block" alt="frame">
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+        <span style="font-size:12px;color:#8b949e;white-space:nowrap">Photo opacity</span>
+        <input id="annotOpacity" type="range" min="0" max="100" value="100" style="flex:1">
+        <span id="annotOpacityVal" style="font-size:12px;color:#eafff5;width:42px;text-align:right">100%</span>
+        <button id="annotTransp" style="background:#1b2230;color:#eafff5;border:1px solid #2a323d;border-radius:8px;padding:4px 9px;font-size:11px;cursor:pointer;white-space:nowrap">See‑through</button>
+      </div>
+      <div style="font-size:10.5px;color:#8b949e">0% = only your drawings/objects show (wearer sees their real view through it).</div>
+      <input id="annotCap" placeholder="caption (e.g. apply pressure here)" style="width:100%;margin-top:8px;background:#0b0f0d;border:1px solid #2a323d;color:#eafff5;border-radius:8px;padding:8px;font-size:13px">
+      <div style="display:flex;gap:8px;margin-top:8px;position:sticky;bottom:0;background:#0d1117;padding:10px 0 2px">
+        <button id="annotSend" style="flex:1;background:#00c98d;color:#03110b;border:none;border-radius:10px;padding:14px;font-weight:800;font-size:15px;cursor:pointer">⬆ Send to glasses</button>
+        <button id="annotClearObjs" style="background:#1b2230;color:#eafff5;border:1px solid #2a323d;border-radius:10px;padding:14px;cursor:pointer">Clear</button>
+      </div>
+      <div id="annotState" style="font-size:11px;color:#8b949e;margin-top:6px"></div>
+    </div>
+  </div>
+  <script>
+  (function(){
+    const OBJS=[["🩹","Bandage"],["🩸","Pressure"],["✋","Hand"],["➡️","Arrow"],["🎯","Where"],["✂️","Cut"],["🧵","Wrap"],["⭕","Circle"]];
+    const p=new URLSearchParams(location.search); const caseId=p.get("caseId");
+    const modal=document.getElementById("annot"), stage=document.getElementById("annotStage"), img=document.getElementById("annotImg");
+    const pal=document.getElementById("annotPalette"); let pending=null; const objs=[];
+    async function ensureMX(){
+      if(typeof MX==="undefined") return false;
+      if(MX.connected && MX.connected()) return true;
+      try{
+        const hs=document.getElementById("mxHs").value.trim(), u=document.getElementById("mxUser").value.trim(), s=document.getElementById("mxSecret").value;
+        const room=(new URLSearchParams(location.search).get("room"))||document.getElementById("mxRoom").value.trim();
+        await MX.login(hs,u,s); await MX.openCase(room,{id:"session",ts:Date.now()});
+        return MX.connected();
+      }catch(e){ return false; }
+    }
+    const opSlider=document.getElementById("annotOpacity"), opVal=document.getElementById("annotOpacityVal");
+    if(opSlider) opSlider.oninput=()=>{ if(opVal)opVal.textContent=opSlider.value+"%"; img.style.opacity=String(opSlider.value/100); };
+    const tpBtn=document.getElementById("annotTransp");
+    if(tpBtn&&opSlider) tpBtn.onclick=()=>{ const v=(Number(opSlider.value)>10)?0:100; opSlider.value=v; opSlider.oninput(); tpBtn.textContent=v===0?"Show photo":"See‑through"; };
+    OBJS.forEach(([e,name])=>{ const b=document.createElement("button"); b.textContent=e+" "+name; b.style.cssText="background:#1b2230;color:#eafff5;border:1px solid #2a323d;border-radius:8px;padding:6px 9px;font-size:12px;cursor:pointer"; b.onclick=()=>{ pending=e; [...pal.children].forEach(x=>x.style.outline=""); b.style.outline="2px solid #00c98d"; }; pal.appendChild(b); });
+    // freehand pen overlay
+    const drawCv=document.createElement("canvas"); drawCv.style.cssText="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:3"; stage.appendChild(drawCv);
+    let penOn=false, dctx=null, drawing=false, penColor="#00e0ff";
+    function syncDraw(){ const w=stage.clientWidth||640, h=stage.clientHeight||360; drawCv.width=w; drawCv.height=h; dctx=drawCv.getContext("2d"); dctx.strokeStyle=penColor; dctx.lineWidth=Math.max(3,w*0.009); dctx.lineCap="round"; dctx.lineJoin="round"; }
+    const penBtn=document.createElement("button"); penBtn.textContent="✏️ Pen"; penBtn.style.cssText="background:#1b2230;color:#eafff5;border:1px solid #2a323d;border-radius:8px;padding:6px 9px;font-size:12px;cursor:pointer"; pal.appendChild(penBtn);
+    penBtn.onclick=()=>{ penOn=!penOn; pending=null; [...pal.children].forEach(x=>x.style.outline=""); penBtn.style.outline=penOn?"2px solid #00e0ff":""; drawCv.style.pointerEvents=penOn?"auto":"none"; };
+    ["#00e0ff","#ff4d4d","#ffd400","#00ff95","#ffffff"].forEach(col=>{ const s=document.createElement("button"); s.dataset.sw="1"; s.title="pen colour"; s.style.cssText="width:24px;height:24px;border-radius:50%;border:2px solid #2a323d;cursor:pointer;background:"+col; s.onclick=()=>{ penColor=col; if(dctx)dctx.strokeStyle=col; if(!penOn)penBtn.click(); [...pal.querySelectorAll("[data-sw]")].forEach(x=>x.style.borderColor="#2a323d"); s.style.borderColor="#fff"; }; pal.appendChild(s); });
+    function dpt(e){ const r=drawCv.getBoundingClientRect(); return [(e.clientX-r.left)*(drawCv.width/r.width),(e.clientY-r.top)*(drawCv.height/r.height)]; }
+    drawCv.addEventListener("pointerdown",e=>{ if(!penOn||!dctx)return; drawing=true; drawCv.setPointerCapture(e.pointerId); const [x,y]=dpt(e); dctx.beginPath(); dctx.moveTo(x,y); });
+    drawCv.addEventListener("pointermove",e=>{ if(!drawing)return; const [x,y]=dpt(e); dctx.lineTo(x,y); dctx.stroke(); });
+    drawCv.addEventListener("pointerup",()=>drawing=false);
+    function activeVideo(){ return [...document.querySelectorAll("video")].find(v=>v.srcObject&&v.videoWidth>0) || document.getElementById("remoteVideo"); }
+    const fab=document.getElementById("freezeAnnot");
+    if(fab) fab.onclick=()=>{
+      const v=activeVideo();
+      if(!v||!v.videoWidth){ alert("No live video yet — start the call first."); return; }
+      const c=document.createElement("canvas"); c.width=v.videoWidth; c.height=v.videoHeight; c.getContext("2d").drawImage(v,0,0,c.width,c.height);
+      img.src=c.toDataURL("image/jpeg",0.85); objs.length=0; [...stage.querySelectorAll(".aob")].forEach(e=>e.remove());
+      document.getElementById("annotState").textContent=""; if(opSlider){opSlider.value=100; if(opVal)opVal.textContent="100%";} img.style.opacity="1"; modal.style.display="flex"; setTimeout(syncDraw,80);
+    };
+    const dlb=document.getElementById("drawLive");
+    if(dlb&&fab) dlb.onclick=()=>{ fab.onclick(); setTimeout(()=>{ if(!penOn) penBtn.click(); },220); };   // grab live frame + arm the pen
+    document.getElementById("annotCancel").onclick=()=>modal.style.display="none";
+    document.getElementById("annotClearObjs").onclick=()=>{ objs.splice(0).forEach(o=>o.el.remove()); if(dctx) dctx.clearRect(0,0,drawCv.width,drawCv.height); };
+    stage.addEventListener("click",(e)=>{ if(!pending) return; if(e.target.classList&&e.target.classList.contains("aob")) return; const r=stage.getBoundingClientRect(); place(pending,(e.clientX-r.left)/r.width,(e.clientY-r.top)/r.height); pending=null; [...pal.children].forEach(x=>x.style.outline=""); });
+    function place(type,x,y){ const el=document.createElement("div"); el.className="aob"; el.textContent=type; el.style.cssText="position:absolute;font-size:40px;transform:translate(-50%,-50%);cursor:move;filter:drop-shadow(0 1px 3px #000);user-select:none;touch-action:none"; el.style.left=(x*100)+"%"; el.style.top=(y*100)+"%"; stage.appendChild(el); const o={type,x,y,el}; objs.push(o); drag(el,o); }
+    function drag(el,o){ let d=false; el.addEventListener("pointerdown",e=>{d=true;el.setPointerCapture(e.pointerId);e.stopPropagation();}); el.addEventListener("pointermove",e=>{ if(!d)return; const r=stage.getBoundingClientRect(); o.x=Math.min(1,Math.max(0,(e.clientX-r.left)/r.width)); o.y=Math.min(1,Math.max(0,(e.clientY-r.top)/r.height)); el.style.left=(o.x*100)+"%"; el.style.top=(o.y*100)+"%"; }); el.addEventListener("pointerup",()=>d=false); el.addEventListener("dblclick",()=>{ const i=objs.indexOf(o); if(i>=0)objs.splice(i,1); el.remove(); }); }
+    document.getElementById("annotSend").onclick=async ()=>{
+      const st=document.getElementById("annotState"); st.textContent="compositing…";
+      const im=new Image(); im.onload=async ()=>{
+        const c=document.createElement("canvas"); c.width=im.naturalWidth||1280; c.height=im.naturalHeight||720;
+        const ctx=c.getContext("2d");
+        const op=(opSlider?Number(opSlider.value):100)/100;
+        ctx.fillStyle="#000"; ctx.fillRect(0,0,c.width,c.height);
+        ctx.globalAlpha=op; ctx.drawImage(im,0,0,c.width,c.height); ctx.globalAlpha=1;   // dim photo → transparent on the additive lens
+        if(drawCv.width) ctx.drawImage(drawCv,0,0,c.width,c.height);   // freehand strokes (full opacity)
+        const fs=Math.round(c.height*0.09); ctx.font=fs+"px serif"; ctx.textAlign="center"; ctx.textBaseline="middle";
+        objs.forEach(o=>ctx.fillText(o.type,o.x*c.width,o.y*c.height));
+        const dataUrl=c.toDataURL("image/jpeg",0.8);
+        const cap=(document.getElementById("annotCap").value||"").trim()||"How to — follow the markers";
+        try{
+          st.textContent="connecting to room…";
+          const ok=await ensureMX();
+          if(ok){ st.textContent="uploading to glasses…"; await MX.send({kind:"image",dataUrl,caption:cap}); st.textContent="✓ sent to glasses + app — room "+String(MX.roomId||"").slice(0,18)+"…"; }
+          else if(caseId){ await fetch("/api/cases/"+encodeURIComponent(caseId)+"/guidance",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({kind:"image",dataUrl,caption:cap,actor:"operator"})}); st.textContent="⚠ sent to backend only — Matrix not connected (app won't see it)"; }
+          else st.textContent="✗ not connected to Matrix";
+        }catch(e){ st.textContent="✗ "+e.message; }
+        setTimeout(()=>{ if(st.textContent.indexOf("✓")===0) modal.style.display="none"; },1300);
+      }; im.src=img.src;
+    };
+  })();
+  </script>
+
+  <script>
+  // Guidance protocols — data-driven step sequences (protocols.json) sent to the glasses.
+  (function(){
+    const sel=document.getElementById("protoSel"), btn=document.getElementById("protoSend"), st=document.getElementById("protoState");
+    if(!sel) return;
+    let protos={};
+    fetch("protocols.json").then(r=>r.json()).then(p=>{ protos=p; sel.innerHTML=""; Object.keys(p).forEach(k=>{ const o=document.createElement("option"); o.value=k; o.textContent=p[k].title; sel.appendChild(o); }); }).catch(()=>{ if(st)st.textContent="could not load protocols"; });
+    if(btn) btn.onclick=async ()=>{
+      const p=protos[sel.value]; if(!p) return;
+      if(!(await window.svEnsureMX())){ st.textContent="connect to Matrix first"; return; }
+      p.steps.forEach((t,i)=>setTimeout(()=>MX.send({kind:"guidance",text:t}), i*3500));
+      st.textContent="sending "+p.title+" ("+p.steps.length+" steps) to glasses…";
+    };
+  })();
+  </script>
+
+  <script>
+  // CPR assist — a 110 bpm beat published to the glasses over the live call (parallel
+  // to the operator's mic), plus spoken breathing-check + cardiac-arrest CPR steps.
+  (function(){
+    const btn=document.getElementById("cprBtn"), st=document.getElementById("cprState");
+    if(!btn) return;
+    let on=false, actx=null, timer=null, dest=null, beatMST=null, timeouts=[], beatGain=0.6, voiceOn=true, bpm=110;
+    function click(){
+      const t=actx.currentTime, o=actx.createOscillator(), g=actx.createGain();
+      o.type="sine"; o.frequency.value=1000;
+      g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(Math.max(0.0002,beatGain),t+0.01); g.gain.exponentialRampToValueAtTime(0.0001,t+0.09);
+      o.connect(g); g.connect(actx.destination); if(dest) g.connect(dest);
+      o.start(t); o.stop(t+0.1);
+    }
+    async function start(){
+      actx=actx||new (window.AudioContext||window.webkitAudioContext)(); try{ await actx.resume(); }catch(e){}
+      dest=actx.createMediaStreamDestination();
+      click(); timer=setInterval(click, 60000/bpm);
+      const room=window._svLiveRoom; const trk=dest.stream.getAudioTracks()[0];
+      if(room && trk){ beatMST=trk; try{ await room.localParticipant.publishTrack(beatMST,{name:"cpr-beat"}); st.textContent="● 110 bpm beat live on glasses + your voice"; }catch(e){ st.textContent="beat local only: "+e.message; } }
+      else st.textContent="beat playing locally — join the live call to send it to the glasses";
+      if(typeof MX!=="undefined" && MX.connected && MX.connected()){
+        const send=(text,ms)=>timeouts.push(setTimeout(()=>MX.send({kind:"guidance",text}),ms));
+        send("Tap shoulders, shout — any response?",0);
+        send("Check breathing 10s — tilt head back, look & listen",3500);
+        send("Not breathing normally? Start CPR now",8000);
+        send("Heel of hand, centre of chest — push HARD & FAST",11500);
+        send("Push to the beat — 110/min, 5–6 cm, don't stop",15000);
+      }
+    }
+    function stop(){
+      if(timer){clearInterval(timer);timer=null;}
+      timeouts.forEach(clearTimeout); timeouts=[];
+      const room=window._svLiveRoom;
+      if(beatMST && room){ try{ room.localParticipant.unpublishTrack(beatMST); }catch(e){} beatMST=null; }
+      if(typeof MX!=="undefined"&&MX.connected&&MX.connected()) MX.send({kind:"guidance",text:"Keep going — help is on the way"});
+      st.textContent="stopped";
+    }
+    btn.onclick=()=>{ on=!on; if(on){ btn.textContent="🟥 Stop CPR mode"; start(); } else { btn.textContent="🫀 Start CPR mode (110 bpm)"; stop(); } };
+    function setBpm(v){ bpm=v; [...document.querySelectorAll(".bpmBtn")].forEach(b=>b.style.outline=(+b.dataset.bpm===v)?"2px solid #00c98d":""); if(timer){ clearInterval(timer); timer=setInterval(click, 60000/bpm); } if(st) st.textContent=bpm+" bpm"; }
+    [...document.querySelectorAll(".bpmBtn")].forEach(b=>{ b.onclick=()=>setBpm(+b.dataset.bpm); if(b.dataset.bpm==="110") b.style.outline="2px solid #00c98d"; });
+    const tb=document.getElementById("cprTest");
+    if(tb) tb.onclick=async ()=>{ if(on){ if(st)st.textContent="already running ("+bpm+" bpm)"; return; } actx=actx||new (window.AudioContext||window.webkitAudioContext)(); try{await actx.resume();}catch(e){} const tt=setInterval(click,60000/bpm); click(); setTimeout(()=>clearInterval(tt),5000); if(st) st.textContent="▶ "+bpm+" bpm test (5s)"; };
+    const bv=document.getElementById("cprBeatVol"); if(bv) bv.oninput=()=>{ beatGain=bv.value/100; };
+    const vc=document.getElementById("cprVoice");
+    if(vc) vc.onclick=()=>{ voiceOn=!voiceOn; const r=window._svLiveRoom; if(r){ try{ r.localParticipant.setMicrophoneEnabled(voiceOn); }catch(e){} } vc.textContent=voiceOn?"🎙 Voice on":"🔇 Voice off"; };
+    async function urlToDataUrl(u){ const r=await fetch(u); const b=await r.blob(); return await new Promise((res,rej)=>{ const fr=new FileReader(); fr.onload=()=>res(fr.result); fr.onerror=rej; fr.readAsDataURL(b); }); }
+    async function sendPhoto(u,cap){ if(typeof MX==="undefined"||!MX.connected||!MX.connected()){ st.textContent="connect to Matrix first"; return; } st.textContent="sending photo…"; try{ const d=await urlToDataUrl(u); await MX.send({kind:"image",dataUrl:d,caption:cap}); st.textContent="✓ "+cap.slice(0,28)+"… sent"; }catch(e){ st.textContent="✗ "+e.message; } }
+    const C="https://commons.wikimedia.org/wiki/Special:FilePath/";
+    const pb=document.getElementById("cprPhotoBreath"); if(pb) pb.onclick=()=>sendPhoto(C+"Recovery_position.jpg","Open airway — tilt head, check breathing 10s");
+    const pc=document.getElementById("cprPhotoCPR"); if(pc) pc.onclick=()=>sendPhoto(C+"Herz-Lungen-Wiederbelebung-Training_an_einer_Laerdal-Rescue-Anne.jpg","CPR — hands centre of chest, push hard & fast 110/min");
+    const pr=document.getElementById("cprPhotoRec"); if(pr) pr.onclick=()=>sendPhoto(C+"Recovery_position.jpg","Recovery position — if breathing normally");
+    async function sendSteps(list){ if(!(await window.svEnsureMX())){ st.textContent="connect to Matrix first"; return; } list.forEach((t,i)=>setTimeout(()=>MX.send({kind:"guidance",text:t}), i*3500)); st.textContent="steps sent to glasses"; }
+    const cbr=document.getElementById("cprBreaths");
+    if(cbr) cbr.onclick=()=>sendSteps(["After 30 compressions — give 2 rescue breaths","Tilt the head back, lift the chin, pinch the nose","Seal your mouth over theirs — 2 slow breaths (1s each)","Watch the chest rise, then resume compressions"]);
+    const cad=document.getElementById("cprAed");
+    if(cad) cad.onclick=()=>sendSteps(["AED arrived — turn it ON, follow its voice","Bare the chest, dry it if wet","Stick pads: one upper-right chest, one lower-left side","Plug in the pads, let the AED analyse — DON'T TOUCH","Shock advised? Everyone clear, press the flashing button","Then resume CPR immediately — push to the beat"]);
+  })();
+  </script>
+</body>
+</html>
